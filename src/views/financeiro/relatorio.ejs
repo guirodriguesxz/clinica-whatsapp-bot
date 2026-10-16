@@ -1,0 +1,252 @@
+<!-- src/views/financeiro/relatorio.ejs -->
+<%- include("../partials/header", { titulo: "Relatório financeiro" }) %>
+<header class="page-header">
+  <div>
+    <h1>Relatório financeiro — <%= relatorio.mes %></h1>
+  </div>
+  <a class="button button--quiet" href="/financeiro">Voltar pro financeiro</a>
+</header>
+
+<div class="report-filters">
+  <form method="get" action="/financeiro/relatorio">
+    <label>Mês<input type="month" name="mes" value="<%= relatorio.mes %>" /></label>
+    <label>Plano de saúde<input type="text" name="plano" value="<%= plano ?? '' %>" /></label>
+    <label>Especialidade
+      <select name="especialidade">
+        <option value="">Todas</option>
+        <option value="fisioterapia" <%= especialidade === 'fisioterapia' ? 'selected' : '' %>>Fisioterapia</option>
+        <option value="psicologia" <%= especialidade === 'psicologia' ? 'selected' : '' %>>Psicologia</option>
+      </select>
+    </label>
+    <label>Dia específico<input type="date" name="dia" value="<%= dia ?? '' %>" /></label>
+    <label>Turno
+      <select name="turno">
+        <option value="">Dia todo</option>
+        <option value="manha" <%= turno === 'manha' ? 'selected' : '' %>>Manhã (até 13h)</option>
+        <option value="tarde" <%= turno === 'tarde' ? 'selected' : '' %>>Tarde (13h em diante)</option>
+      </select>
+    </label>
+    <label>Dividir total faturado entre quantos fisioterapeutas<input type="number" name="porFisioterapeutas" min="1" step="1" value="<%= porFisioterapeutas ?? '' %>" /></label>
+    <button type="submit">Filtrar</button>
+  </form>
+</div>
+
+<div class="metric-grid">
+  <div class="metric-card">
+    <h2>Total faturado</h2>
+    <p class="metric-value">R$ <%= formatarMoeda(relatorio.totalFaturado.total) %> (<%= relatorio.totalFaturado.quantidade %> pagamentos)</p>
+    <p class="registro-info">Total assinado já consolidado pelo backend, incluindo os lançamentos compensatórios.</p>
+    <p class="registro-info">Estornos no período: <%= relatorio.totalFaturado.quantidade_estornos %></p>
+  </div>
+  <div class="metric-card">
+    <h2>Total recebido</h2>
+    <p class="metric-value">R$ <%= formatarMoeda(relatorio.totalRecebido.total) %> (<%= relatorio.totalRecebido.quantidade %> pagamentos)</p>
+    <p class="registro-info">Total assinado dos lançamentos com status pago, consolidado pelo backend.</p>
+  </div>
+  <% if (valorPorFisioterapeuta != null) { %>
+  <div class="metric-card">
+    <h2>Valor por fisioterapeuta</h2>
+    <p class="metric-value">R$ <%= formatarMoeda(valorPorFisioterapeuta) %></p>
+    <p class="registro-info">Total faturado ÷ <%= porFisioterapeutas %> fisioterapeuta<%= porFisioterapeutas > 1 ? 's' : '' %>, conforme os filtros aplicados acima.</p>
+  </div>
+  <% } %>
+</div>
+
+<section class="report-section">
+  <h2>Por tipo de atendimento</h2>
+  <div class="report-section-table">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th>Total</th>
+          <th>Quantidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% relatorio.porTipoAtendimento.forEach((linha) => { %>
+        <tr>
+          <td><%= linha.tipo_atendimento %></td>
+          <td>R$ <%= formatarMoeda(linha.total) %></td>
+          <td><%= linha.quantidade %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="report-section">
+  <h2>Por plano de saúde</h2>
+  <div class="report-section-table">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Plano</th>
+          <th>Total</th>
+          <th>Quantidade</th>
+          <th>Avaliações</th>
+          <th>Sessões</th>
+          <th>Repasse</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% relatorio.porPlano.forEach((linha) => { %>
+        <tr>
+          <td><%= linha.plano %></td>
+          <td>R$ <%= formatarMoeda(linha.total) %></td>
+          <td><%= linha.quantidade %></td>
+          <td><%= linha.quantidade_avaliacao %></td>
+          <td><%= linha.quantidade_sessao %></td>
+          <td>
+            <% if (linha.valorRepasse != null) { %>
+            R$ <%= formatarMoeda(linha.valorRepasse) %>
+            <% } else if (linha.motivoRepasseIndisponivel === "nao_configurado") { %>
+            — <span class="dica-repasse">(convênio sem valores de repasse cadastrados)</span>
+            <% } else { %>
+            — <span class="dica-repasse">(paciente sem convênio identificado)</span>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="report-section">
+  <h2>Psicologia por profissional</h2>
+  <% if (relatorio.porProfissionalPsicologia.length === 0) { %>
+  <p class="registro-info">Sem dados de profissional para Psicologia neste período (só disponível para agendamentos importados do sistema anterior).</p>
+  <% } else { %>
+  <div class="report-section-table">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Profissional</th>
+          <th>Total</th>
+          <th>Quantidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% relatorio.porProfissionalPsicologia.forEach((linha) => { %>
+        <tr>
+          <td><%= linha.profissional %></td>
+          <td>R$ <%= formatarMoeda(linha.total) %></td>
+          <td><%= linha.quantidade %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</section>
+
+<section class="report-section">
+  <h2>Por forma de pagamento</h2>
+  <div class="report-section-table">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Forma</th>
+          <th>Total</th>
+          <th>Quantidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% relatorio.porFormaPagamento.forEach((linha) => { %>
+        <tr>
+          <td><%= linha.forma_pagamento %></td>
+          <td>R$ <%= formatarMoeda(linha.total) %></td>
+          <td><%= linha.quantidade %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="report-section">
+  <h2>Por status</h2>
+  <div class="report-section-table">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Total</th>
+          <th>Quantidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% relatorio.porStatus.forEach((linha) => { %>
+        <tr>
+          <td><%= linha.status %></td>
+          <td>R$ <%= formatarMoeda(linha.total) %></td>
+          <td><%= linha.quantidade %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="report-section">
+  <h2>Detalhamento dos lançamentos</h2>
+  <% const linhasDetalhamento = relatorio.detalhamento || []; %>
+  <% if (!linhasDetalhamento.length) { %>
+  <p>Nenhum lançamento no período.</p>
+  <% } else { %>
+  <div class="report-section-table">
+    <table class="data-table finance-detail-table">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Hora</th>
+          <th>Paciente</th>
+          <th>Tipo</th>
+          <th>Forma</th>
+          <th>Status</th>
+          <th>Valor</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% let dataDetalheAnterior = null; %>
+        <% linhasDetalhamento.forEach((linha) => {
+          const mostraCabecalhoDia = linha.data_pagamento !== dataDetalheAnterior;
+          dataDetalheAnterior = linha.data_pagamento;
+          const classePeriodo = linha.hora_atendimento && linha.hora_atendimento < "12:00:00" ? "is-manha" : "is-tarde";
+          const ehEstorno = linha.tipo_lancamento === "estorno";
+        %>
+        <% if (mostraCabecalhoDia) { %>
+        <tr class="finance-day-header">
+          <th colspan="7"><%= formatarDataExtensa(linha.data_pagamento) %></th>
+        </tr>
+        <% } %>
+        <tr class="<%= classePeriodo %>">
+          <td><%= linha.data_pagamento %></td>
+          <td><%= linha.hora_atendimento ?? "—" %></td>
+          <td><%= linha.paciente_nome %></td>
+          <td><%= linha.tipo_atendimento ?? "—" %></td>
+          <td><%= linha.forma_pagamento %></td>
+          <td>
+            <% if (ehEstorno) { %>
+            <span class="badge-estornado">Estorno</span>
+            <% } else if (linha.status === "pago") { %>
+            <span class="badge is-success">Pago</span>
+            <% } else if (linha.status === "pendente") { %>
+            <span class="badge is-warning">Pendente</span>
+            <% } else if (linha.status === "aguardando_reembolso") { %>
+            <span class="badge is-warning">Aguardando reembolso</span>
+            <% } else { %>
+            <span class="badge"><%= linha.status %></span>
+            <% } %>
+          </td>
+          <td><%= ehEstorno ? "−" : "" %>R$ <%= formatarMoeda(linha.valor) %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</section>
+<%- include("../partials/footer") %>

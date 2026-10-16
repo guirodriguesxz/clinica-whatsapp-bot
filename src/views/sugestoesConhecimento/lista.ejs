@@ -1,0 +1,48 @@
+<!-- src/views/sugestoesConhecimento/lista.ejs -->
+<%- include("../partials/header", { titulo: "Sugestões de conhecimento" }) %>
+<section class="user-list">
+  <header class="page-header">
+    <div>
+      <h1>Sugestões de conhecimento</h1>
+      <p class="patient-list-summary">
+        Perguntas que o bot não soube responder e encaminhou pra equipe. Aprove pra virar uma entrada
+        na base de conhecimento, ou descarte se não fizer sentido.
+      </p>
+    </div>
+  </header>
+  <div class="panel user-list-panel">
+    <% if (!sugestoes.length) { %>
+    <p class="patient-list-summary">Nenhuma sugestão pendente no momento.</p>
+    <% } else { %>
+    <div class="patient-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Pergunta</th><th>Paciente</th><th>Data</th><th>Ações</th></tr>
+        </thead>
+        <tbody>
+          <% for (const sugestao of sugestoes) { %>
+          <tr>
+            <td><%= sugestao.pergunta %></td>
+            <td><%= sugestao.paciente_nome ?? "—" %><% if (sugestao.paciente_telefone) { %> (<%= sugestao.paciente_telefone %>)<% } %></td>
+            <td><%= new Date(sugestao.created_at).toLocaleDateString("pt-BR") %></td>
+            <td>
+              <div class="user-row-actions">
+                <a
+                  class="button"
+                  href="/base-conhecimento/novo?sugestaoId=<%= sugestao.id %>&pergunta=<%= encodeURIComponent(sugestao.pergunta) %>"
+                >Aprovar</a>
+                <form method="post" action="/sugestoes-conhecimento/<%= sugestao.id %>/descartar">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <button class="button is-danger" type="submit">Descartar</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+</section>
+<%- include("../partials/footer") %>

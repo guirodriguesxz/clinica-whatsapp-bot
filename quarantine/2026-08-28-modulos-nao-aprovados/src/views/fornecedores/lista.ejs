@@ -1,0 +1,30 @@
+<!-- src/views/fornecedores/lista.ejs -->
+<%- include("../partials/header", { titulo: "Fornecedores" }) %>
+<h1>Fornecedores</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Nome</th>
+      <th>Telefone</th>
+      <th>Observação</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% fornecedores.forEach((f) => { %>
+    <tr>
+      <td><%= f.nome %></td>
+      <td><%= f.telefone ?? "" %></td>
+      <td><%= f.observacao ?? "" %></td>
+    </tr>
+    <% }) %>
+  </tbody>
+</table>
+<h2>Novo fornecedor</h2>
+<form method="post" action="/fornecedores">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <label>Nome<input type="text" name="nome" required /></label>
+  <label>Telefone<input type="text" name="telefone" /></label>
+  <label>Observação<input type="text" name="observacao" /></label>
+  <button type="submit">Adicionar</button>
+</form>
+<%- include("../partials/footer") %>

@@ -1,0 +1,141 @@
+<!-- src/views/agendamentos/editar.ejs -->
+<%- include("../partials/header", { titulo: "Editar agendamento" }) %>
+<header class="page-header">
+  <div>
+    <h1>Editar agendamento</h1>
+    <p><%= agendamento.paciente_nome %> — <%= formatarData(agendamento.data) %> às <%= agendamento.hora.slice(0, 5) %></p>
+  </div>
+  <a class="button button--quiet" href="/agendamentos">Voltar</a>
+</header>
+
+<% if (typeof erro !== "undefined" && erro) { %>
+  <p class="erro"><%= erro %></p>
+<% } %>
+
+<form class="panel form-grid" method="post" action="/agendamentos/<%= agendamento.origem %>/<%= agendamento.id %>/editar">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+  <label>
+    Tipo de atendimento
+    <select name="tipo_atendimento" id="tipo_atendimento" required>
+      <option value="fisioterapia" <%= agendamento.tipo_atendimento === "fisioterapia" ? "selected" : "" %>>Fisioterapia</option>
+      <option value="psicologia" <%= agendamento.tipo_atendimento === "psicologia" ? "selected" : "" %>>Psicologia</option>
+    </select>
+  </label>
+  <label>
+    Data
+    <input type="date" name="data" value="<%= agendamento.data %>" required />
+  </label>
+  <label>
+    Hora
+    <input type="time" name="hora" value="<%= agendamento.hora %>" required />
+  </label>
+  <label id="psicologo-label" hidden>
+    Psicóloga
+    <select name="psicologo_id" id="psicologo_id">
+      <option value="">Não definida</option>
+      <% psicologos.forEach((p) => { %>
+      <option value="<%= p.id %>" <%= agendamento.psicologo_id === p.id ? "selected" : "" %>><%= p.nome %></option>
+      <% }) %>
+    </select>
+  </label>
+  <label id="fisioterapeuta-label" hidden>
+    Atendente (fisioterapeuta)
+    <select name="fisioterapeuta_id" id="fisioterapeuta_id">
+      <option value="">Não definido</option>
+      <% fisioterapeutas.forEach((f) => { %>
+      <option value="<%= f.id %>" <%= agendamento.fisioterapeuta_id === f.id ? "selected" : "" %>><%= f.nome %></option>
+      <% }) %>
+    </select>
+  </label>
+
+  <% if (agendamento.origem === "importado") { %>
+    <fieldset class="panel">
+      <legend>Paciente</legend>
+      <label>
+        Nome
+        <input type="text" name="paciente_nome" value="<%= agendamento.paciente_nome %>" required />
+      </label>
+      <label>
+        Telefone
+        <input type="text" name="paciente_telefone" value="<%= agendamento.paciente_telefone %>" required />
+      </label>
+    </fieldset>
+  <% } else { %>
+    <fieldset class="panel">
+      <legend>Paciente</legend>
+      <label>
+        Buscar paciente
+        <input type="text" id="busca-paciente" value="<%= agendamento.paciente_nome %>" autocomplete="off" />
+      </label>
+      <div id="sugestoes-paciente" class="autocomplete-sugestoes" hidden></div>
+      <input type="hidden" name="paciente_id" id="paciente_id" value="<%= agendamento.paciente_id %>" />
+    </fieldset>
+  <% } %>
+
+  <div class="toolbar">
+    <button type="submit">Salvar alterações</button>
+  </div>
+</form>
+
+<script>
+  (function () {
+    const tipoAtendimento = document.getElementById("tipo_atendimento");
+    const psicologoLabel = document.getElementById("psicologo-label");
+    const fisioterapeutaLabel = document.getElementById("fisioterapeuta-label");
+
+    function atualizarVisibilidadeProfissional() {
+      psicologoLabel.hidden = tipoAtendimento.value !== "psicologia";
+      fisioterapeutaLabel.hidden = tipoAtendimento.value !== "fisioterapia";
+    }
+    tipoAtendimento.addEventListener("change", atualizarVisibilidadeProfissional);
+    atualizarVisibilidadeProfissional();
+  })();
+</script>
+
+<% if (agendamento.origem !== "importado") { %>
+<script>
+  (function () {
+    const busca = document.getElementById("busca-paciente");
+    const sugestoes = document.getElementById("sugestoes-paciente");
+    const pacienteIdInput = document.getElementById("paciente_id");
+    let temporizador = null;
+
+    busca.addEventListener("input", () => {
+      pacienteIdInput.value = "";
+      clearTimeout(temporizador);
+      const termo = busca.value.trim();
+      if (termo.length < 2) {
+        sugestoes.hidden = true;
+        sugestoes.replaceChildren();
+        return;
+      }
+      temporizador = setTimeout(async () => {
+        const resposta = await fetch("/api/pacientes/busca?q=" + encodeURIComponent(termo));
+        const resultados = await resposta.json();
+        const botoes = resultados.map((p) => {
+          const botao = document.createElement("button");
+          botao.type = "button";
+          botao.className = "sugestao-item";
+          botao.dataset.id = p.id;
+          botao.dataset.nome = p.nome;
+          botao.textContent = p.nome + " — " + p.telefone;
+          return botao;
+        });
+        sugestoes.replaceChildren(...botoes);
+        sugestoes.hidden = resultados.length === 0;
+      }, 250);
+    });
+
+    sugestoes.addEventListener("click", (evento) => {
+      const item = evento.target.closest(".sugestao-item");
+      if (!item) return;
+      pacienteIdInput.value = item.dataset.id;
+      busca.value = item.dataset.nome;
+      sugestoes.hidden = true;
+    });
+  })();
+</script>
+<% } %>
+
+<%- include("../partials/footer") %>

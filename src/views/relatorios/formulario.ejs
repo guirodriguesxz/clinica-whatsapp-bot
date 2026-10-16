@@ -1,0 +1,71 @@
+<!-- src/views/relatorios/formulario.ejs -->
+<%- include("../partials/header", { titulo: relatorio ? "Editar relatório" : "Novo relatório" }) %>
+<header class="page-header">
+  <div>
+    <h1><%= relatorio ? "Editar relatório" : "Novo relatório" %></h1>
+    <p>Paciente: <%= paciente.nome %></p>
+  </div>
+  <a class="button button--quiet" href="/pacientes/<%= paciente.id %>/ficha">Voltar para a ficha</a>
+</header>
+
+<form class="focused-form" method="post" action="<%= acaoForm %>">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <% if (erro) { %>
+  <p class="erro"><%= erro %></p>
+  <% } %>
+
+  <div class="form-grid">
+    <label>Data do relatório<input type="date" name="data_relatorio" value="<%= relatorio?.dataRelatorio ?? '' %>" required /></label>
+    <label>Profissional responsável
+      <select name="fisioterapeuta_id">
+        <option value="">— selecione —</option>
+        <% for (const fisioterapeuta of fisioterapeutas) { %>
+        <option value="<%= fisioterapeuta.id %>"<%= relatorio?.fisioterapeutaId === fisioterapeuta.id ? " selected" : "" %>><%= fisioterapeuta.crefito ? `${fisioterapeuta.nome} / Crefito ${fisioterapeuta.crefito}` : fisioterapeuta.nome %><%= fisioterapeuta.ativo === false ? " (inativo)" : "" %></option>
+        <% } %>
+      </select>
+    </label>
+  </div>
+
+  <% if (relatorio && relatorio.profissionalResponsavel && !relatorio.fisioterapeutaId) { %>
+  <p>Assinatura anterior (texto livre, sem fisioterapeuta cadastrado): <%= relatorio.profissionalResponsavel %>. Selecione um fisioterapeuta acima pra habilitar a assinatura eletrônica, ou deixe em branco pra manter esse texto.</p>
+  <input type="hidden" name="profissional_responsavel_legado" value="<%= relatorio.profissionalResponsavel %>" />
+  <% } %>
+
+  <fieldset>
+    <legend>Conteúdo do relatório</legend>
+    <div class="form-grid">
+      <label>Diagnóstico / motivo do tratamento<textarea name="diagnostico_motivo" rows="4"><%= relatorio?.diagnosticoMotivo ?? '' %></textarea></label>
+      <label>Conduta e evolução<textarea name="conduta_evolucao" rows="6"><%= relatorio?.condutaEvolucao ?? '' %></textarea></label>
+      <label>Considerações finais<textarea name="consideracoes_finais" rows="4"><%= relatorio?.consideracoesFinais ?? '' %></textarea></label>
+    </div>
+  </fieldset>
+
+  <div class="toolbar">
+    <button type="submit">Salvar</button>
+    <button
+      type="submit"
+      class="button button--quiet"
+      formaction="/pacientes/<%= paciente.id %>/relatorios/rascunho/pdf"
+    >Baixar rascunho (PDF)</button>
+    <button
+      type="submit"
+      class="button button--quiet"
+      formaction="/pacientes/<%= paciente.id %>/relatorios/rascunho/docx"
+    >Baixar rascunho (Word)</button>
+    <% if (relatorio) { %>
+    <a class="button button--quiet" href="/pacientes/<%= paciente.id %>/relatorios/<%= relatorio.id %>/pdf">Gerar PDF</a>
+    <a class="button button--quiet" href="/pacientes/<%= paciente.id %>/relatorios/<%= relatorio.id %>/docx">Baixar Word</a>
+    <% } %>
+  </div>
+</form>
+<% if (relatorio && typeof usuarioAtual !== "undefined" && usuarioAtual?.papel === "administradora") { %>
+<form
+  method="post"
+  action="/pacientes/<%= paciente.id %>/relatorios/<%= relatorio.id %>/excluir"
+  onsubmit="return confirm('Excluir este relatório? Essa ação não pode ser desfeita.')"
+>
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <button class="button is-danger" type="submit">Excluir relatório</button>
+</form>
+<% } %>
+<%- include("../partials/footer") %>

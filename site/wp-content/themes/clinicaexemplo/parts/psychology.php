@@ -1,0 +1,2 @@
+<section class="section"><div class="container split"><div><span class="eyebrow">Psicologia</span><h2>Um espaço seguro para escutar, compreender e cuidar</h2><p>Atendimento psicológico para crianças, adolescentes e adultos, com acompanhamento individualizado e respeito a cada história.</p><a class="button" href="<?php echo esc_url(home_url('/psicologia/')); ?>">Conheça a Psicologia</a></div><div class="media-frame"><?php clinicaexemplo_image('sala-psicologia.webp', 'Sala reservada para atendimento psicológico na Clínica Exemplo'); ?></div></div></section>
+

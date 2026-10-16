@@ -1,0 +1,25 @@
+<!-- src/views/login.ejs -->
+<%- include("partials/header", { titulo: "Login" }) %>
+<div class="login-layout">
+  <div class="login-card">
+    <img class="logo-claro" src="/img/logo-clinica-exemplo-modern.svg" alt="Clínica Exemplo" />
+    <img class="logo-escuro" src="/img/logo-clinica-exemplo-modern-dark.svg" alt="Clínica Exemplo" />
+    <h1>Entrar</h1>
+    <% if (erro) { %>
+    <p class="erro"><%= erro %></p>
+    <% } %>
+    <form method="post" action="/login">
+      <label>Nome de usuário<input type="text" name="nome_usuario" required autofocus autocomplete="username" /></label>
+      <label>Senha<input type="password" name="senha" required autocomplete="current-password" /></label>
+      <label class="login-manter-conectado">
+        <input type="checkbox" name="manter_conectado" />
+        Manter conectado
+      </label>
+      <button type="submit">Entrar</button>
+    </form>
+    <p class="login-esqueci-senha">
+      Esqueceu a senha? Peça pra uma administradora (Bruno ou Ana) redefinir em Usuários.
+    </p>
+  </div>
+</div>
+<%- include("partials/footer") %>

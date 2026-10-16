@@ -1,0 +1,61 @@
+<!-- src/views/estoque/lista.ejs -->
+<%- include("../partials/header", { titulo: "Estoque" }) %>
+<h1>Estoque</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Nome</th>
+      <th>Categoria</th>
+      <th>Unidade</th>
+      <th>Quantidade</th>
+      <th>Fornecedor</th>
+      <th>Centro de custo</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% materiais.forEach((m) => { %>
+    <tr>
+      <td><%= m.nome %></td>
+      <td><%= m.categoria ?? "" %></td>
+      <td><%= m.unidade_medida ?? "" %></td>
+      <td>
+        <%= m.quantidade_em_estoque %>
+        <% if (m.estoque_minimo != null && m.quantidade_em_estoque < m.estoque_minimo) { %>
+        <span class="badge-estornado">estoque baixo</span>
+        <% } %>
+      </td>
+      <td><%= m.fornecedor_nome ?? "" %></td>
+      <td><%= m.centro_custo_nome ?? "" %></td>
+    </tr>
+    <% }) %>
+  </tbody>
+</table>
+<h2>Novo material</h2>
+<form method="post" action="/estoque">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <label>Nome<input type="text" name="nome" required /></label>
+  <label>Categoria<input type="text" name="categoria" /></label>
+  <label>Unidade de medida<input type="text" name="unidade_medida" placeholder="unidade, caixa, ml..." /></label>
+  <label>Quantidade em estoque<input type="number" name="quantidade_em_estoque" min="0" value="0" /></label>
+  <label>Estoque mínimo (opcional)<input type="number" name="estoque_minimo" min="0" /></label>
+  <label
+    >Fornecedor
+    <select name="fornecedor_id">
+      <option value="">—</option>
+      <% fornecedores.forEach((f) => { %>
+      <option value="<%= f.id %>"><%= f.nome %></option>
+      <% }) %>
+    </select>
+  </label>
+  <label
+    >Centro de custo
+    <select name="centro_custo_id">
+      <option value="">—</option>
+      <% centrosCusto.forEach((c) => { %>
+      <option value="<%= c.id %>"><%= c.nome %></option>
+      <% }) %>
+    </select>
+  </label>
+  <button type="submit">Adicionar</button>
+</form>
+<%- include("../partials/footer") %>

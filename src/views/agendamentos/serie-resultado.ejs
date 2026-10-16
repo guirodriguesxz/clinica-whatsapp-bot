@@ -1,0 +1,49 @@
+<!-- src/views/agendamentos/serie-resultado.ejs -->
+<%- include("../partials/header", { titulo: "Série de agendamentos" }) %>
+<header class="page-header">
+  <div>
+    <h1>Série de agendamentos criada</h1>
+    <p>
+      <strong><%= paciente.nome %></strong> — <%= tipoAtendimento %>
+      · <%= resultados.filter((r) => r.criado).length %> de <%= resultados.length %> sessão(ões) criada(s)
+    </p>
+  </div>
+  <a class="button" href="/agendamentos">Ir para Agendamentos</a>
+</header>
+
+<div class="panel agenda-table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Hora</th>
+        <th>Status</th>
+        <th><span class="sr-only">Ações</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% resultados.forEach((r) => { %>
+      <tr>
+        <td><%= formatarData(r.data) %></td>
+        <td><%= r.hora %></td>
+        <td>
+          <% if (r.criado) { %>
+          <span class="badge is-success">Criada</span>
+          <% } else { %>
+          <span class="badge is-danger">Pulada — <%= r.motivo %></span>
+          <% } %>
+        </td>
+        <td>
+          <% if (r.criado) { %>
+          <form method="post" action="/agendamentos/bot/<%= r.id %>/confirmar-whatsapp">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <button class="button button--quiet" type="submit">Enviar confirmação</button>
+          </form>
+          <% } %>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<%- include("../partials/footer") %>

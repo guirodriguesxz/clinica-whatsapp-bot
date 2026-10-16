@@ -1,0 +1,24 @@
+<%- include("../partials/header", { titulo: "Dados do prestador" }) %>
+<header class="page-header">
+  <div>
+    <h1>Dados do prestador</h1>
+    <p>Dados cadastrais da clínica usados no cabeçalho do lote TISS eletrônico.</p>
+  </div>
+</header>
+<% if (sucesso) { %>
+<p class="sucesso">Alteração salva com sucesso.</p>
+<% } %>
+<form class="focused-form" method="post" action="/configuracoes/prestador">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <div class="form-grid">
+    <label>CNES<input type="text" name="cnes" placeholder="Opcional" value="<%= dados.cnes ?? '' %>" /></label>
+    <label>Razão social<input type="text" name="razao_social" placeholder="Opcional" value="<%= dados.razao_social ?? '' %>" /></label>
+    <label>CNPJ<input type="text" name="cnpj" placeholder="Opcional" value="<%= dados.cnpj ?? '' %>" /></label>
+    <label>CBO Fisioterapia<input type="text" name="cbo_fisioterapia" placeholder="Opcional" value="<%= dados.cbo_fisioterapia ?? '' %>" /></label>
+    <label>CBO Psicologia<input type="text" name="cbo_psicologia" placeholder="Opcional" value="<%= dados.cbo_psicologia ?? '' %>" /></label>
+  </div>
+  <div class="toolbar">
+    <button type="submit">Salvar</button>
+  </div>
+</form>
+<%- include("../partials/footer") %>

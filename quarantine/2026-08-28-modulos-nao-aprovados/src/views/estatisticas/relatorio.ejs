@@ -1,0 +1,63 @@
+<!-- src/views/estatisticas/relatorio.ejs -->
+<%- include("../partials/header", { titulo: "Estatísticas" }) %>
+<h1>Estatísticas — <%= estatisticas.mes %></h1>
+<form method="get" action="/estatisticas">
+  <label>Mês<input type="month" name="mes" value="<%= estatisticas.mes %>" /></label>
+  <button type="submit">Ver mês</button>
+</form>
+
+<h2>Atendimentos por tipo</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Tipo</th>
+      <th>Quantidade</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% estatisticas.porTipoAtendimento.forEach((linha) => { %>
+    <tr>
+      <td><%= linha.tipo_atendimento %></td>
+      <td><%= linha.quantidade %></td>
+    </tr>
+    <% }) %>
+  </tbody>
+</table>
+
+<h2>Presença</h2>
+<p class="registro-info">Só conta atendimentos com presença já registrada em /presenca.</p>
+<table>
+  <thead>
+    <tr>
+      <th>Presença</th>
+      <th>Quantidade</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% estatisticas.porPresenca.forEach((linha) => { %>
+    <tr>
+      <td><%= linha.presenca %></td>
+      <td><%= linha.quantidade %></td>
+    </tr>
+    <% }) %>
+  </tbody>
+</table>
+
+<h2>Atendimentos por convênio</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Convênio</th>
+      <th>Quantidade</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% estatisticas.porConvenio.forEach((linha) => { %>
+    <tr>
+      <td><%= linha.convenio %></td>
+      <td><%= linha.quantidade %></td>
+    </tr>
+    <% }) %>
+  </tbody>
+</table>
+<%- include("../partials/footer") %>

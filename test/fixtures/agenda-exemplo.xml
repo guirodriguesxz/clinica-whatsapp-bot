@@ -1,0 +1,63 @@
+<?xml version="1.0" standalone="yes"?>
+<NewDataSet>
+  <Table1>
+   <Hora>Hora</Hora>
+   <Paciente>Paciente</Paciente>
+   <Obs>Obs</Obs>
+   <CPF>CPF</CPF>
+   <Nascimento>Nascimento</Nascimento>
+   <Telefone>Telefone</Telefone>
+   <Categoria>Categoria</Categoria>
+   <Tipo>Tipo</Tipo>
+   <F>F</F>
+   <Atendente>Atendente</Atendente>
+   <C>C</C>
+   <E>E</E>
+   <Chegou>Chegou</Chegou>
+  </Table1>
+  <Table1>
+   <Hora>07:00</Hora>
+   <Paciente>MARIA DA SILVA</Paciente>
+   <Obs>MATRICULA 123 - SENHA ABC</Obs>
+   <CPF>111.111.111-11</CPF>
+   <Nascimento>20/11/1971</Nascimento>
+   <Telefone>11 99999-1111</Telefone>
+   <Categoria>Particular</Categoria>
+   <Tipo>OK</Tipo>
+   <F>S</F>
+   <Atendente>Carlos</Atendente>
+   <C> </C>
+   <E></E>
+   <Chegou></Chegou>
+  </Table1>
+  <Table1>
+   <Hora>07:30</Hora>
+   <Paciente></Paciente>
+   <Obs></Obs>
+   <CPF></CPF>
+   <Nascimento></Nascimento>
+   <Telefone></Telefone>
+   <Categoria></Categoria>
+   <Tipo></Tipo>
+   <F></F>
+   <Atendente></Atendente>
+   <C></C>
+   <E></E>
+   <Chegou></Chegou>
+  </Table1>
+  <Table1>
+   <Hora>08:00</Hora>
+   <Paciente>JOAO SEM TELEFONE</Paciente>
+   <Obs></Obs>
+   <CPF></CPF>
+   <Nascimento></Nascimento>
+   <Telefone></Telefone>
+   <Categoria>Mar Azul Saúde</Categoria>
+   <Tipo>AVAL</Tipo>
+   <F></F>
+   <Atendente>Bruno</Atendente>
+   <C></C>
+   <E>E</E>
+   <Chegou>Chegou</Chegou>
+  </Table1>
+</NewDataSet>

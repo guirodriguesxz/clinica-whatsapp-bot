@@ -1,0 +1,60 @@
+<!-- src/views/pacientes/novo.ejs -->
+<%- include("../partials/header", { titulo: "Novo paciente" }) %>
+<header class="page-header">
+  <div>
+    <h1>Novo paciente</h1>
+    <p>Cadastre um paciente manualmente (ex: contato que a equipe já iniciou pelo WhatsApp).</p>
+  </div>
+  <a class="button button--quiet" href="/pacientes">Voltar</a>
+</header>
+
+<form class="focused-form" method="post" action="/pacientes/novo">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <% if (pacienteExistente) { %>
+  <p class="erro">
+    Já existe um paciente cadastrado com esse telefone:
+    <strong><%= pacienteExistente.nome %></strong> —
+    <a href="/pacientes/<%= pacienteExistente.id %>/ficha">ver ficha</a>.
+  </p>
+  <% } else if (erro) { %>
+  <p class="erro"><%= erro %></p>
+  <% } %>
+  <div class="form-grid">
+    <label>
+      Nome
+      <input type="text" name="nome" value="<%= nome %>" required />
+    </label>
+    <label>
+      Telefone (WhatsApp, com DDD)
+      <input type="text" name="telefone" value="<%= telefone %>" required />
+    </label>
+    <label>
+      Atendimento
+      <select name="tipo_convenio" id="tipo_convenio">
+        <option value="particular" <%= tipoConvenio !== "convenio" ? "selected" : "" %>>Particular</option>
+        <option value="convenio" <%= tipoConvenio === "convenio" ? "selected" : "" %>>Convênio</option>
+      </select>
+    </label>
+    <label id="convenio-texto-label" hidden>
+      Qual convênio?
+      <input type="text" name="convenio_texto" value="<%= convenioTexto %>" />
+    </label>
+  </div>
+  <div class="toolbar">
+    <button type="submit">Cadastrar</button>
+  </div>
+</form>
+
+<script>
+  (function () {
+    const tipoConvenio = document.getElementById("tipo_convenio");
+    const convenioTextoLabel = document.getElementById("convenio-texto-label");
+
+    function atualizarVisibilidadeConvenio() {
+      convenioTextoLabel.hidden = tipoConvenio.value !== "convenio";
+    }
+    tipoConvenio.addEventListener("change", atualizarVisibilidadeConvenio);
+    atualizarVisibilidadeConvenio();
+  })();
+</script>
+<%- include("../partials/footer") %>

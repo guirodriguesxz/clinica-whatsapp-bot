@@ -1,0 +1,63 @@
+<!-- src/views/convenios/lista.ejs -->
+<%- include("../partials/header", { titulo: "Convênios" }) %>
+<section class="user-list">
+  <header class="page-header">
+    <div>
+      <h1>Convênios</h1>
+      <p class="patient-list-summary">Cadastro dos convênios e valores de repasse da clínica.</p>
+    </div>
+    <div class="toolbar">
+      <% if (mostrarTodos) { %>
+      <a class="button button--quiet" href="/convenios">Mostrar só ativos</a>
+      <% } else { %>
+      <a class="button button--quiet" href="/convenios?todos=1">Mostrar inativos</a>
+      <% } %>
+      <a class="button" href="/convenios/novo">Novo convênio</a>
+    </div>
+  </header>
+  <% if (sucesso) { %>
+  <p class="sucesso">Alteração salva com sucesso.</p>
+  <% } %>
+  <div class="panel user-list-panel">
+    <div class="patient-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Nome</th><th>Repasse avaliação</th><th>Repasse sessão</th><th>Status</th><th>Ações</th></tr>
+        </thead>
+        <tbody>
+          <% for (const convenio of convenios) { %>
+          <tr>
+            <td><%= convenio.nome %></td>
+            <td><%= convenio.valor_repasse_avaliacao != null ? `R$ ${formatarMoeda(convenio.valor_repasse_avaliacao)}` : "—" %></td>
+            <td><%= convenio.valor_repasse_sessao != null ? `R$ ${formatarMoeda(convenio.valor_repasse_sessao)}` : "—" %></td>
+            <td><span class="badge <%= convenio.ativo ? 'is-success' : 'is-danger' %>"><%= convenio.ativo ? "Ativo" : "Inativo" %></span></td>
+            <td>
+              <div class="user-row-actions">
+                <a class="button button--quiet" href="/convenios/<%= convenio.id %>/editar<%= mostrarTodos ? '?todos=1' : '' %>">Editar</a>
+                <% if (convenio.ativo) { %>
+                <form method="post" action="/convenios/<%= convenio.id %>/desativar">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <% if (mostrarTodos) { %>
+                  <input type="hidden" name="todos" value="1" />
+                  <% } %>
+                  <button class="button is-danger" type="submit">Desativar</button>
+                </form>
+                <% } else { %>
+                <form method="post" action="/convenios/<%= convenio.id %>/reativar">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <% if (mostrarTodos) { %>
+                  <input type="hidden" name="todos" value="1" />
+                  <% } %>
+                  <button class="button" type="submit">Reativar</button>
+                </form>
+                <% } %>
+              </div>
+            </td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<%- include("../partials/footer") %>

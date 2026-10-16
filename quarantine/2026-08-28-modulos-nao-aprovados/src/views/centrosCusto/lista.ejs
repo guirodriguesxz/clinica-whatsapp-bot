@@ -1,0 +1,27 @@
+<!-- src/views/centrosCusto/lista.ejs -->
+<%- include("../partials/header", { titulo: "Centros de custo" }) %>
+<h1>Centros de custo</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Nome</th>
+      <th>Descrição</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% centrosCusto.forEach((c) => { %>
+    <tr>
+      <td><%= c.nome %></td>
+      <td><%= c.descricao ?? "" %></td>
+    </tr>
+    <% }) %>
+  </tbody>
+</table>
+<h2>Novo centro de custo</h2>
+<form method="post" action="/centros-custo">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <label>Nome<input type="text" name="nome" required /></label>
+  <label>Descrição<input type="text" name="descricao" /></label>
+  <button type="submit">Adicionar</button>
+</form>
+<%- include("../partials/footer") %>

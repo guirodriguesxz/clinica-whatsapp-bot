@@ -1,0 +1,33 @@
+<!-- src/views/fisioterapeutas/editar.ejs -->
+<%- include("../partials/header", { titulo: "Editar fisioterapeuta" }) %>
+<header class="page-header">
+  <div>
+    <h1>Editar fisioterapeuta</h1>
+    <p>Corrija os dados cadastrados ou envie uma nova assinatura.</p>
+  </div>
+  <a class="button button--quiet" href="/fisioterapeutas<%= mostrarTodos ? '?todos=1' : '' %>">Voltar</a>
+</header>
+
+<form class="focused-form" method="post" action="/fisioterapeutas/<%= fisioterapeuta.id %>/editar" enctype="multipart/form-data">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <% if (mostrarTodos) { %>
+  <input type="hidden" name="todos" value="1" />
+  <% } %>
+  <% if (erro) { %>
+  <p class="erro"><%= erro %></p>
+  <% } %>
+  <div class="form-grid">
+    <label>Nome<input type="text" name="nome" value="<%= fisioterapeuta.nome %>" required /></label>
+    <label>Crefito<input type="text" name="crefito" value="<%= fisioterapeuta.crefito ?? '' %>" placeholder="Ex.: 435050-F" /></label>
+    <label>Assinatura (imagem PNG ou JPEG)
+      <% if (fisioterapeuta.temAssinatura && fisioterapeuta.ativo) { %>
+      <img src="/fisioterapeutas/<%= fisioterapeuta.id %>/assinatura" alt="Assinatura atual de <%= fisioterapeuta.nome %>" class="signature-preview" />
+      <% } %>
+      <input name="assinatura" type="file" accept="image/png,image/jpeg" />
+    </label>
+  </div>
+  <div class="toolbar">
+    <button type="submit">Salvar</button>
+  </div>
+</form>
+<%- include("../partials/footer") %>

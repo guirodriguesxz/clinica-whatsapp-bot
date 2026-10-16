@@ -1,0 +1,62 @@
+<!-- src/views/convenios/editar.ejs -->
+<%- include("../partials/header", { titulo: "Editar convênio" }) %>
+<header class="page-header">
+  <div>
+    <h1>Editar convênio</h1>
+    <p>Corrija o nome ou os valores de repasse.</p>
+  </div>
+  <a class="button button--quiet" href="/convenios<%= mostrarTodos ? '?todos=1' : '' %>">Voltar</a>
+</header>
+
+<form class="focused-form" method="post" action="/convenios/<%= convenio.id %>/editar">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <% if (mostrarTodos) { %>
+  <input type="hidden" name="todos" value="1" />
+  <% } %>
+  <% if (erro) { %>
+  <p class="erro"><%= erro %></p>
+  <% } %>
+  <div class="form-grid">
+    <label>Nome<input type="text" name="nome" value="<%= convenio.nome %>" required /></label>
+    <label>Repasse avaliação (R$)<input type="text" name="valor_repasse_avaliacao" inputmode="decimal" placeholder="Opcional" value="<%= convenio.valor_repasse_avaliacao ?? '' %>" /></label>
+    <label>Repasse sessão (R$)<input type="text" name="valor_repasse_sessao" inputmode="decimal" placeholder="Opcional" value="<%= convenio.valor_repasse_sessao ?? '' %>" /></label>
+  </div>
+  <fieldset>
+    <legend>Dados TISS (opcional — preencher quando levantado com a operadora)</legend>
+    <div class="form-grid">
+      <label>Código do prestador na operadora<input type="text" name="codigo_prestador_na_operadora" placeholder="Opcional" value="<%= convenio.codigo_prestador_na_operadora ?? '' %>" /></label>
+      <label>Número do contrato<input type="text" name="numero_contrato" placeholder="Opcional" value="<%= convenio.numero_contrato ?? '' %>" /></label>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Tipo</th><th>Categoria</th><th>Código TUSS</th><th>Descrição</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Fisioterapia</td><td>Avaliação</td>
+          <td><input type="text" name="tuss_fisioterapia_avaliacao_codigo" value="<%= procedimentosTussPorChave.fisioterapia_avaliacao?.codigo_tuss ?? '' %>" /></td>
+          <td><input type="text" name="tuss_fisioterapia_avaliacao_descricao" value="<%= procedimentosTussPorChave.fisioterapia_avaliacao?.descricao_tuss ?? '' %>" /></td>
+        </tr>
+        <tr>
+          <td>Fisioterapia</td><td>Sessão</td>
+          <td><input type="text" name="tuss_fisioterapia_sessao_codigo" value="<%= procedimentosTussPorChave.fisioterapia_sessao?.codigo_tuss ?? '' %>" /></td>
+          <td><input type="text" name="tuss_fisioterapia_sessao_descricao" value="<%= procedimentosTussPorChave.fisioterapia_sessao?.descricao_tuss ?? '' %>" /></td>
+        </tr>
+        <tr>
+          <td>Psicologia</td><td>Avaliação</td>
+          <td><input type="text" name="tuss_psicologia_avaliacao_codigo" value="<%= procedimentosTussPorChave.psicologia_avaliacao?.codigo_tuss ?? '' %>" /></td>
+          <td><input type="text" name="tuss_psicologia_avaliacao_descricao" value="<%= procedimentosTussPorChave.psicologia_avaliacao?.descricao_tuss ?? '' %>" /></td>
+        </tr>
+        <tr>
+          <td>Psicologia</td><td>Sessão</td>
+          <td><input type="text" name="tuss_psicologia_sessao_codigo" value="<%= procedimentosTussPorChave.psicologia_sessao?.codigo_tuss ?? '' %>" /></td>
+          <td><input type="text" name="tuss_psicologia_sessao_descricao" value="<%= procedimentosTussPorChave.psicologia_sessao?.descricao_tuss ?? '' %>" /></td>
+        </tr>
+      </tbody>
+    </table>
+  </fieldset>
+  <div class="toolbar">
+    <button type="submit">Salvar</button>
+  </div>
+</form>
+<%- include("../partials/footer") %>

@@ -1,0 +1,25 @@
+<!-- src/views/convenios/novo.ejs -->
+<%- include("../partials/header", { titulo: "Novo convênio" }) %>
+<header class="page-header">
+  <div>
+    <h1>Novo convênio</h1>
+    <p>Cadastre um convênio da clínica. Os valores de repasse são opcionais e podem ser preenchidos depois.</p>
+  </div>
+  <a class="button button--quiet" href="/convenios">Voltar</a>
+</header>
+
+<form class="focused-form" method="post" action="/convenios/novo">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <% if (erro) { %>
+  <p class="erro"><%= erro %></p>
+  <% } %>
+  <div class="form-grid">
+    <label>Nome<input type="text" name="nome" required /></label>
+    <label>Repasse avaliação (R$)<input type="text" name="valor_repasse_avaliacao" inputmode="decimal" placeholder="Opcional" /></label>
+    <label>Repasse sessão (R$)<input type="text" name="valor_repasse_sessao" inputmode="decimal" placeholder="Opcional" /></label>
+  </div>
+  <div class="toolbar">
+    <button type="submit">Criar</button>
+  </div>
+</form>
+<%- include("../partials/footer") %>

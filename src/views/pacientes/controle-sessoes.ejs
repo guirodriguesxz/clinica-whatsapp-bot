@@ -1,0 +1,60 @@
+<%- include("../partials/header", { titulo: "Controle de sessões" }) %>
+<section class="controle-sessoes session-control">
+  <header class="page-header screen-only">
+    <div>
+      <p class="session-control-kicker">Paciente</p>
+      <h1>Controle de sessões</h1>
+    </div>
+    <p class="session-control-intro">Uma via para acompanhamento e assinatura em cada atendimento.</p>
+  </header>
+  <% if (typeof mensagemWhatsapp !== "undefined" && mensagemWhatsapp) { %>
+  <p class="sucesso screen-only"><%= mensagemWhatsapp %></p>
+  <% } %>
+  <div class="acoes-impressao screen-only">
+    <a href="/pacientes/<%= paciente.id %>/ficha">Voltar para ficha</a>
+    <a href="/pacientes/<%= paciente.id %>/ficha?imprimir=1" target="_blank">Imprimir ficha</a>
+    <button type="button" onclick="window.print()">Imprimir controle</button>
+    <form method="post" action="/pacientes/<%= paciente.id %>/controle-sessoes/enviar-whatsapp">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <button type="submit">Enviar por WhatsApp</button>
+    </form>
+  </div>
+  <form class="linhas-controle-sessoes screen-only" method="get" action="/pacientes/<%= paciente.id %>/controle-sessoes">
+    <label>
+      Linhas no controle
+      <input type="number" name="linhas" min="1" max="60" value="<%= totalLinhas %>" />
+    </label>
+    <button type="submit">Atualizar</button>
+    <% if (totalLinhas !== totalAutomatico) { %>
+    <a href="/pacientes/<%= paciente.id %>/controle-sessoes">Usar automático (<%= totalAutomatico %>)</a>
+    <% } %>
+  </form>
+  <div class="fichas-sessoes">
+    <article class="ficha-sessao print-copy">
+      <header class="cabecalho-ficha">
+        <span class="print-only">Clínica Exemplo</span>
+        <strong>Controle de Fisioterapia</strong>
+      </header>
+      <p class="nome-paciente"><strong>Paciente:</strong> <%= paciente.nome %></p>
+      <p class="data-avaliacao"><strong>Avaliação:</strong> <%= dataAvaliacao ? formatarData(dataAvaliacao) : "" %></p>
+      <table class="tabela-sessoes">
+        <thead>
+          <tr><th>#</th><th>Data</th><th>Hora</th><th>Status</th><th>Assinatura do paciente</th><th>Obs.</th></tr>
+        </thead>
+        <tbody>
+          <% sessoes.forEach((sessao) => { %>
+          <tr>
+            <td><%= sessao.numero %></td>
+            <td><%= sessao.data ?? "" %></td>
+            <td><%= sessao.hora ?? "" %></td>
+            <td><%= sessao.status ?? "" %></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </article>
+  </div>
+</section>
+<%- include("../partials/footer") %>

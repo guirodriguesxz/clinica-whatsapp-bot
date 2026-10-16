@@ -1,0 +1,66 @@
+<!-- src/views/fisioterapeutas/lista.ejs -->
+<%- include("../partials/header", { titulo: "Fisioterapeutas" }) %>
+<section class="user-list">
+  <header class="page-header">
+    <div>
+      <h1>Fisioterapeutas</h1>
+      <p class="patient-list-summary">Cadastro dos fisioterapeutas da clínica, com assinatura pro relatório fisioterapêutico.</p>
+    </div>
+    <div class="toolbar">
+      <% if (mostrarTodos) { %>
+      <a class="button button--quiet" href="/fisioterapeutas">Mostrar só ativos</a>
+      <% } else { %>
+      <a class="button button--quiet" href="/fisioterapeutas?todos=1">Mostrar inativos</a>
+      <% } %>
+      <% if (usuarioAtual.papel === "administradora") { %>
+      <a class="button" href="/fisioterapeutas/novo">Novo fisioterapeuta</a>
+      <% } %>
+    </div>
+  </header>
+  <% if (sucesso) { %>
+  <p class="sucesso">Alteração salva com sucesso.</p>
+  <% } %>
+  <div class="panel user-list-panel">
+    <div class="patient-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nome</th><th>Crefito</th><th>Assinatura</th><th>Status</th>
+            <% if (usuarioAtual.papel === "administradora") { %><th>Ações</th><% } %>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const fisioterapeuta of fisioterapeutas) { %>
+          <tr>
+            <td><%= fisioterapeuta.nome %></td>
+            <td><%= fisioterapeuta.crefito ?? "" %></td>
+            <td><span class="badge <%= fisioterapeuta.temAssinatura ? 'is-success' : 'is-danger' %>"><%= fisioterapeuta.temAssinatura ? "Cadastrada" : "Não cadastrada" %></span></td>
+            <td><span class="badge <%= fisioterapeuta.ativo ? 'is-success' : 'is-danger' %>"><%= fisioterapeuta.ativo ? "Ativo" : "Inativo" %></span></td>
+            <% if (usuarioAtual.papel === "administradora") { %>
+            <td>
+              <div class="user-row-actions">
+                <a class="button button--quiet" href="/fisioterapeutas/<%= fisioterapeuta.id %>/editar<%= mostrarTodos ? '?todos=1' : '' %>">Editar</a>
+                <% if (fisioterapeuta.ativo) { %>
+                <form method="post" action="/fisioterapeutas/<%= fisioterapeuta.id %>/desativar">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <% if (mostrarTodos) { %><input type="hidden" name="todos" value="1" /><% } %>
+                  <button class="button is-danger" type="submit">Desativar</button>
+                </form>
+                <% } else { %>
+                <form method="post" action="/fisioterapeutas/<%= fisioterapeuta.id %>/reativar">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <% if (mostrarTodos) { %><input type="hidden" name="todos" value="1" /><% } %>
+                  <button class="button" type="submit">Reativar</button>
+                </form>
+                <% } %>
+              </div>
+            </td>
+            <% } %>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<%- include("../partials/footer") %>

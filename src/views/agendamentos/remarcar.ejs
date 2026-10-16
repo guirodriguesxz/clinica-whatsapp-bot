@@ -1,0 +1,68 @@
+<!-- src/views/agendamentos/remarcar.ejs -->
+<%- include("../partials/header", { titulo: "Remarcar consulta" }) %>
+<header class="page-header">
+  <div>
+    <h1>Remarcar consulta</h1>
+    <p>Escolha uma nova data e horário disponível.</p>
+  </div>
+  <a class="button button--quiet" href="/agendamentos">Voltar</a>
+</header>
+
+<section class="panel dados-paciente">
+  <p><strong><%= agendamento.paciente_nome %></strong> — <%= agendamento.tipo_atendimento %></p>
+  <p>Horário atual: <strong><%= formatarData(agendamento.data) %> às <%= agendamento.hora.slice(0, 5) %></strong></p>
+</section>
+
+<form class="panel form-grid" method="get" action="/agendamentos/<%= agendamento.origem %>/<%= agendamento.id %>/remarcar">
+  <label>
+    Nova data
+    <input type="date" name="data" value="<%= dataEscolhida ?? '' %>" required />
+  </label>
+  <div class="toolbar">
+    <button type="submit">Ver horários livres</button>
+  </div>
+</form>
+
+<% if (dataEscolhida) { %>
+  <% if (horarios.length === 0) { %>
+    <p class="erro">Nenhum horário livre nesse dia.</p>
+  <% } else { %>
+    <%
+      const manha = horarios.filter((h) => h.hora < "12:00");
+      const tarde = horarios.filter((h) => h.hora >= "12:00");
+    %>
+    <form class="panel" method="post" action="/agendamentos/<%= agendamento.origem %>/<%= agendamento.id %>/remarcar">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input type="hidden" name="data" value="<%= dataEscolhida %>" />
+
+      <% if (manha.length) { %>
+        <h2>Manhã</h2>
+        <div class="grade-horarios">
+          <% manha.forEach((h) => { %>
+            <label>
+              <input type="radio" name="hora" value="<%= h.hora %>" required />
+              <span><%= h.hora %></span>
+            </label>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <% if (tarde.length) { %>
+        <h2>Tarde</h2>
+        <div class="grade-horarios">
+          <% tarde.forEach((h) => { %>
+            <label>
+              <input type="radio" name="hora" value="<%= h.hora %>" required />
+              <span><%= h.hora %></span>
+            </label>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <div class="toolbar">
+        <button type="submit">Confirmar remarcação</button>
+      </div>
+    </form>
+  <% } %>
+<% } %>
+<%- include("../partials/footer") %>

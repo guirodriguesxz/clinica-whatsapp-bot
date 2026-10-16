@@ -1,0 +1,32 @@
+<!-- src/views/psicologos/editar.ejs -->
+<%- include("../partials/header", { titulo: "Editar psicólogo" }) %>
+<header class="page-header">
+  <div>
+    <h1>Editar psicólogo</h1>
+    <p>Corrija o nome cadastrado ou envie uma foto.</p>
+  </div>
+  <a class="button button--quiet" href="/psicologos<%= mostrarTodos ? '?todos=1' : '' %>">Voltar</a>
+</header>
+
+<form class="focused-form" method="post" action="/psicologos/<%= psicologo.id %>/editar" enctype="multipart/form-data">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <% if (mostrarTodos) { %>
+  <input type="hidden" name="todos" value="1" />
+  <% } %>
+  <% if (erro) { %>
+  <p class="erro"><%= erro %></p>
+  <% } %>
+  <div class="form-grid">
+    <label>Nome<input type="text" name="nome" value="<%= psicologo.nome %>" required /></label>
+    <label>Foto (imagem PNG ou JPEG)
+      <% if (psicologo.temFoto) { %>
+      <img src="/psicologos/<%= psicologo.id %>/foto" alt="Foto atual de <%= psicologo.nome %>" class="photo-preview" />
+      <% } %>
+      <input name="foto" type="file" accept="image/png,image/jpeg" />
+    </label>
+  </div>
+  <div class="toolbar">
+    <button type="submit">Salvar</button>
+  </div>
+</form>
+<%- include("../partials/footer") %>

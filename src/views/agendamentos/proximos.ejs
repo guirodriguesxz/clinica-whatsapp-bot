@@ -1,0 +1,240 @@
+<!-- src/views/agendamentos/proximos.ejs -->
+<% const caminhoBase = tipoFixo === "psicologia" ? "/psicologia/proximos" : "/agendamentos/proximos"; %>
+<%- include("../partials/header", { titulo: tipoFixo === "psicologia" ? "Próximos (Psicologia)" : "Próximos agendamentos" }) %>
+<header class="page-header">
+  <div>
+    <h1><%= tipoFixo === "psicologia" ? "Próximos (Psicologia)" : "Próximos agendamentos" %></h1>
+    <p class="agenda-summary">
+      A partir de uma semana pra frente, agrupado por dia e período · <%= itens.length %> agendamento(s)
+    </p>
+  </div>
+  <a class="button screen-only" href="/agendamentos/novo<%= tipoFixo ? `?tipo_atendimento=${tipoFixo}` : "" %>">+ Novo agendamento</a>
+</header>
+
+<% if (mensagemWhatsapp) { %>
+<p class="sucesso"><%= mensagemWhatsapp %></p>
+<% } %>
+<% if (mensagemPresenca) { %>
+<p class="sucesso"><%= mensagemPresenca %></p>
+<% } %>
+
+<%
+  const parametrosFiltroAtual = {
+    status: filtros.status,
+    tipo_atendimento: filtros.tipo_atendimento,
+    busca: filtros.busca,
+    periodo: filtros.periodo,
+    psicologo_id: filtros.psicologo_id,
+    origem: filtros.origem,
+    avaliacao: filtros.avaliacao,
+  };
+  const urlAtual = caminhoBase + "?" + new URLSearchParams(parametrosFiltroAtual).toString();
+%>
+
+<form class="filter-bar screen-only" method="get" action="<%= caminhoBase %>">
+  <label>
+    Status
+    <select name="status">
+      <option value="">Todos (exceto cancelados)</option>
+      <option value="confirmado" <%= filtros.status === "confirmado" ? "selected" : "" %>>Confirmado</option>
+      <option value="cancelado" <%= filtros.status === "cancelado" ? "selected" : "" %>>Cancelado</option>
+      <option value="compareceu" <%= filtros.status === "compareceu" ? "selected" : "" %>>Compareceu</option>
+      <option value="faltou" <%= filtros.status === "faltou" ? "selected" : "" %>>Faltou</option>
+    </select>
+  </label>
+  <% if (!tipoFixo) { %>
+  <label>
+    Tipo
+    <select name="tipo_atendimento">
+      <option value="">Todos</option>
+      <option value="fisioterapia" <%= filtros.tipo_atendimento === "fisioterapia" ? "selected" : "" %>>Fisioterapia</option>
+      <option value="psicologia" <%= filtros.tipo_atendimento === "psicologia" ? "selected" : "" %>>Psicologia</option>
+    </select>
+  </label>
+  <% } %>
+  <label>
+    Período
+    <select name="periodo">
+      <option value="">Todos</option>
+      <option value="manha" <%= filtros.periodo === "manha" ? "selected" : "" %>>Manhã</option>
+      <option value="tarde" <%= filtros.periodo === "tarde" ? "selected" : "" %>>Tarde</option>
+    </select>
+  </label>
+  <label>
+    Psicóloga
+    <select name="psicologo_id">
+      <option value="">Todas</option>
+      <% psicologos.forEach((p) => { %>
+      <option value="<%= p.id %>" <%= filtros.psicologo_id === String(p.id) ? "selected" : "" %>><%= p.nome %></option>
+      <% }) %>
+    </select>
+  </label>
+  <label>
+    Paciente / telefone
+    <input type="text" name="busca" value="<%= filtros.busca %>" />
+  </label>
+  <label>
+    Origem
+    <select name="origem">
+      <option value="">Todas</option>
+      <option value="bot" <%= filtros.origem === "bot" ? "selected" : "" %>>Bot</option>
+      <option value="manual" <%= filtros.origem === "manual" ? "selected" : "" %>>Manual</option>
+      <option value="importado" <%= filtros.origem === "importado" ? "selected" : "" %>>Importado</option>
+    </select>
+  </label>
+  <label>
+    Avaliação
+    <select name="avaliacao">
+      <option value="">Todos</option>
+      <option value="avaliacao" <%= filtros.avaliacao === "avaliacao" ? "selected" : "" %>>Avaliação</option>
+      <option value="retorno" <%= filtros.avaliacao === "retorno" ? "selected" : "" %>>Retorno</option>
+    </select>
+  </label>
+  <button type="submit">Filtrar</button>
+  <a class="button button--quiet" href="<%= caminhoBase %>">Limpar filtros</a>
+</form>
+
+<form id="form-presenca-lote" class="bulk-actions screen-only" method="post" action="/agendamentos/presenca-lote">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <input type="hidden" name="retorno_url" value="<%= urlAtual %>" />
+  <span>Marcar presença dos selecionados:</span>
+  <span id="contador-selecionados-presenca" class="contador-selecionados">Nenhum selecionado</span>
+  <button type="submit" name="presenca" value="compareceu">Compareceu</button>
+  <button type="submit" name="presenca" value="faltou">Faltou</button>
+</form>
+
+<section class="agenda-layout">
+  <div class="panel agenda-table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th class="screen-only presenca-lote-td"><label class="presenca-lote-label"><input type="checkbox" id="selecionar-todos-presenca" aria-label="Selecionar todos" /></label></th>
+          <th>Data</th>
+          <th>Hora</th>
+          <th>Paciente</th>
+          <th>Telefone</th>
+          <th>Convênio</th>
+          <th>Tipo</th>
+          <th>Origem</th>
+          <th>Status</th>
+          <th class="screen-only">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% itens.forEach((item, indice) => { %>
+          <%
+            const anterior = itens[indice - 1];
+            const iniciaSlot = !anterior || anterior.data !== item.data || anterior.hora !== item.hora;
+            const classeSlot = iniciaSlot ? "is-slot-start" : "is-slot-continuation";
+            const classePeriodo = item.hora < "12:00:00" ? "is-manha" : "is-tarde";
+            const iniciaDia = !anterior || anterior.data !== item.data;
+            const iniciaPeriodo = iniciaDia || (anterior.hora < "12:00:00") !== (item.hora < "12:00:00");
+          %>
+          <% if (iniciaDia) { %>
+          <tr class="agenda-day-header screen-only"><td colspan="10"><%= formatarDataComDiaSemana(item.data) %></td></tr>
+          <% } %>
+          <% if (iniciaPeriodo) { %>
+          <tr class="agenda-period-header screen-only"><td colspan="10"><%= classePeriodo === "is-manha" ? "Manhã" : "Tarde" %></td></tr>
+          <% } %>
+          <tr class="appointment-row <%= item.ja_passou ? 'is-past' : 'is-upcoming' %> <%= classeSlot %> <%= classePeriodo %> status-<%= item.status %>">
+            <td class="screen-only presenca-lote-td">
+              <% if (item.status !== "cancelado") { %>
+              <label class="presenca-lote-label">
+                <input type="checkbox" name="itens" value="<%= item.origem %>:<%= item.id %>" class="presenca-lote-checkbox" form="form-presenca-lote" aria-label="Selecionar <%= item.paciente_nome %>" />
+              </label>
+              <% } %>
+            </td>
+            <td><%= formatarDataExtensa(item.data) %></td>
+            <td class="appointment-time"><%= item.hora.slice(0, 5) %></td>
+            <td><strong><%= item.paciente_nome %></strong></td>
+            <td class="appointment-phone"><%= item.paciente_telefone %></td>
+            <td><%= item.paciente_convenio || "—" %></td>
+            <td><%= item.tipo_atendimento %></td>
+            <td><%= item.origem === "importado" ? "Importado" : (item.criado_por_usuario_id ? "Manual" : "Bot") %></td>
+            <td>
+              <% if (item.status === "cancelado") { %>
+                <span class="badge badge-estornado is-danger">Cancelado</span>
+              <% } else if (item.status === "compareceu") { %>
+                <span class="badge is-success">Compareceu</span>
+              <% } else if (item.status === "faltou") { %>
+                <span class="badge is-warning">Faltou</span>
+              <% } else { %>
+                <span class="badge"><%= item.status %></span>
+              <% } %>
+            </td>
+            <td class="screen-only">
+              <% if (item.paciente_id) { %>
+                <a class="button button--quiet" href="/pacientes/<%= item.paciente_id %>/ficha?imprimir=1" target="_blank" title="Imprimir ficha do paciente">🖨️ Ficha</a>
+              <% } %>
+              <% if (item.status === "confirmado" && !item.ja_passou) { %>
+                <details class="appointment-actions">
+                  <summary>Gerenciar</summary>
+                <div class="row-actions">
+                  <a class="button button--quiet" href="/agendamentos/<%= item.origem %>/<%= item.id %>/remarcar">Remarcar</a>
+                  <a class="button button--quiet" href="/agendamentos/<%= item.origem %>/<%= item.id %>/editar">Editar</a>
+                  <form method="post" action="/agendamentos/<%= item.origem %>/<%= item.id %>/confirmar-whatsapp">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <input type="hidden" name="retorno" value="proximos" />
+                    <button class="button button--quiet" type="submit">Enviar confirmação</button>
+                  </form>
+                  <form method="post" action="/agendamentos/<%= item.origem %>/<%= item.id %>/cancelar" onsubmit="return confirm('Cancelar este agendamento?')">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <button class="button is-danger" type="submit">Cancelar</button>
+                  </form>
+                </div>
+                </details>
+              <% } %>
+              <% if (item.status !== "cancelado") { %>
+                <details class="attendance-panel">
+                  <summary><%= item.presenca ? "Corrigir presença" : "Registrar presença" %></summary>
+                  <form method="post" action="/agendamentos/<%= item.origem === 'bot' ? 'bot' : 'importado' %>/<%= item.id %>/presenca">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <input type="hidden" name="retorno_url" value="<%= urlAtual %>" />
+                    <label>
+                      <input type="radio" name="presenca" value="compareceu" <%= item.presenca === "compareceu" ? "checked" : "" %> required />
+                      Compareceu
+                    </label>
+                    <label>
+                      <input type="radio" name="presenca" value="faltou" <%= item.presenca === "faltou" ? "checked" : "" %> />
+                      Faltou
+                    </label>
+                    <textarea name="observacao_sessao" placeholder="Observação (opcional)"><%= item.observacao_sessao ?? "" %></textarea>
+                    <input type="text" name="profissional_responsavel" placeholder="Profissional responsável (opcional)" value="<%= item.profissional_responsavel ?? '' %>" />
+                    <button type="submit"><%= item.presenca ? "Corrigir" : "Registrar" %></button>
+                  </form>
+                </details>
+                <% if (item.presenca) { %>
+                  <p class="registro-info">Registrado por <%= item.registrado_por_nome %> em <%= formatarDataHora(item.registrado_em) %></p>
+                <% } %>
+                <% if (item.observacao_sessao) { %>
+                  <a href="/agendamentos/<%= item.origem === 'bot' ? 'bot' : 'importado' %>/<%= item.id %>/laudo">Gerar laudo</a>
+                <% } %>
+              <% } else { %>
+                —
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+<script>
+  document.getElementById("selecionar-todos-presenca")?.addEventListener("change", (evento) => {
+    document.querySelectorAll(".presenca-lote-checkbox").forEach((checkbox) => {
+      checkbox.checked = evento.target.checked;
+    });
+    atualizarContadorSelecionados();
+  });
+
+  function atualizarContadorSelecionados() {
+    const contador = document.getElementById("contador-selecionados-presenca");
+    if (!contador) return;
+    const total = document.querySelectorAll(".presenca-lote-checkbox:checked").length;
+    contador.textContent = total === 0 ? "Nenhum selecionado" : total === 1 ? "1 selecionado" : `${total} selecionados`;
+  }
+  document.querySelectorAll(".presenca-lote-checkbox").forEach((checkbox) => {
+    checkbox.addEventListener("change", atualizarContadorSelecionados);
+  });
+</script>
+<%- include("../partials/footer") %>

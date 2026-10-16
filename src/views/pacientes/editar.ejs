@@ -1,0 +1,99 @@
+<!-- src/views/pacientes/editar.ejs -->
+<%- include("../partials/header", { titulo: "Editar dados do paciente" }) %>
+<header class="page-header">
+  <div>
+    <h1>Editar dados — <%= paciente.nome %></h1>
+    <p>Dados cadastrais completos, usados na ficha de impressão.</p>
+  </div>
+  <a class="button button--quiet" href="/pacientes/<%= paciente.id %>/ficha">Voltar</a>
+</header>
+
+<form class="panel form-grid" method="post" action="/pacientes/<%= paciente.id %>/editar">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+  <label>
+    CPF
+    <input type="text" name="cpf" value="<%= paciente.cpf ?? '' %>" />
+  </label>
+  <label>
+    RG
+    <input type="text" name="rg" value="<%= paciente.rg ?? '' %>" />
+  </label>
+  <label>
+    CNS (Cartão Nacional de Saúde)
+    <input type="text" name="cns" value="<%= paciente.cns ?? '' %>" />
+  </label>
+  <label>
+    Data de nascimento
+    <input type="date" name="data_nascimento" value="<%= paciente.data_nascimento ?? '' %>" />
+  </label>
+  <label>
+    Sexo
+    <select name="sexo">
+      <option value="" <%= !paciente.sexo ? "selected" : "" %>>Não informado</option>
+      <option value="F" <%= paciente.sexo === "F" ? "selected" : "" %>>Feminino</option>
+      <option value="M" <%= paciente.sexo === "M" ? "selected" : "" %>>Masculino</option>
+    </select>
+  </label>
+  <label>
+    Estado civil
+    <input type="text" name="estado_civil" value="<%= paciente.estado_civil ?? '' %>" />
+  </label>
+  <label>
+    Profissão
+    <input type="text" name="profissao" value="<%= paciente.profissao ?? '' %>" />
+  </label>
+  <label>
+    E-mail
+    <input type="email" name="email" value="<%= paciente.email ?? '' %>" />
+  </label>
+
+  <label>
+    Endereço
+    <input type="text" name="endereco" value="<%= paciente.endereco ?? '' %>" />
+  </label>
+  <label>
+    Número
+    <input type="text" name="numero" value="<%= paciente.numero ?? '' %>" />
+  </label>
+  <label>
+    Bairro
+    <input type="text" name="bairro" value="<%= paciente.bairro ?? '' %>" />
+  </label>
+  <label>
+    Cidade
+    <input type="text" name="cidade" value="<%= paciente.cidade ?? '' %>" />
+  </label>
+  <label>
+    UF
+    <input type="text" name="uf" maxlength="2" value="<%= paciente.uf ?? '' %>" />
+  </label>
+  <label>
+    CEP
+    <input type="text" name="cep" value="<%= paciente.cep ?? '' %>" />
+  </label>
+
+  <label>
+    Convênio
+    <select name="convenio_id">
+      <option value="">Manter como está<% if (paciente.convenio) { %> (<%= paciente.convenio %>)<% } %></option>
+      <% convenios.forEach((c) => { %>
+      <option value="<%= c.id %>" <%= paciente.convenio_id === c.id ? "selected" : "" %>><%= c.nome %></option>
+      <% }) %>
+    </select>
+  </label>
+  <label>
+    Matrícula do convênio
+    <input type="text" name="matricula_convenio" value="<%= paciente.matricula_convenio ?? '' %>" />
+  </label>
+
+  <label>
+    Observação
+    <textarea name="observacao" rows="4"><%= paciente.observacao ?? '' %></textarea>
+  </label>
+
+  <div class="toolbar">
+    <button type="submit">Salvar</button>
+  </div>
+</form>
+<%- include("../partials/footer") %>

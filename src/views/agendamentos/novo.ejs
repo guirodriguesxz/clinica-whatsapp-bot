@@ -1,0 +1,286 @@
+<!-- src/views/agendamentos/novo.ejs -->
+<%- include("../partials/header", { titulo: "Novo agendamento" }) %>
+<header class="page-header">
+  <div>
+    <h1>Novo agendamento</h1>
+    <p>Fisioterapia ou Psicologia — mesma validação de disponibilidade do bot.</p>
+  </div>
+  <a class="button button--quiet" href="<%= voltarPara %>">Voltar</a>
+</header>
+
+<% if (typeof erro !== "undefined" && erro) { %>
+  <p class="erro"><%= erro %></p>
+<% } %>
+
+<div class="novo-agendamento-layout">
+<form class="panel form-grid" method="post" action="/agendamentos/novo">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+  <label>
+    Tipo de atendimento
+    <select name="tipo_atendimento" id="tipo_atendimento" required>
+      <option value="fisioterapia" <%= tipoAtendimentoInicial === "fisioterapia" ? "selected" : "" %>>Fisioterapia</option>
+      <option value="psicologia" <%= tipoAtendimentoInicial === "psicologia" ? "selected" : "" %>>Psicologia</option>
+    </select>
+  </label>
+  <label>
+    Data
+    <input type="date" name="data" required />
+  </label>
+  <label>
+    Hora
+    <input type="time" name="hora" required />
+  </label>
+  <label id="psicologo-label" hidden>
+    Psicóloga
+    <select name="psicologo_id" id="psicologo_id">
+      <option value="">Não definida</option>
+      <% psicologos.forEach((p) => { %>
+      <option value="<%= p.id %>"><%= p.nome %></option>
+      <% }) %>
+    </select>
+  </label>
+  <label id="fisioterapeuta-label" hidden>
+    Atendente (fisioterapeuta)
+    <select name="fisioterapeuta_id" id="fisioterapeuta_id">
+      <option value="">Não definido</option>
+      <% fisioterapeutas.forEach((f) => { %>
+      <option value="<%= f.id %>"><%= f.nome %></option>
+      <% }) %>
+    </select>
+  </label>
+
+  <fieldset class="panel">
+    <legend>Mais sessões (mesmo paciente)</legend>
+    <label class="login-manter-conectado">
+      <input type="checkbox" name="repetir_semanalmente" id="repetir_semanalmente" />
+      Repetir semanalmente (mesmo horário toda semana)
+    </label>
+    <label id="quantidade-sessoes-label" hidden>
+      Quantas sessões
+      <input type="number" name="quantidade_sessoes" id="quantidade_sessoes" min="2" max="52" value="8" />
+    </label>
+
+    <p class="ou-divisor">— ou adicione horários avulsos (dias e horários diferentes entre si) —</p>
+    <div id="datas-avulsas-lista"></div>
+    <button type="button" class="button button--quiet" id="adicionar-data-avulsa">+ Adicionar outro horário</button>
+  </fieldset>
+
+  <fieldset class="panel">
+    <legend>Paciente</legend>
+    <label>
+      Buscar paciente existente
+      <input type="text" id="busca-paciente" placeholder="Nome, telefone ou CPF" autocomplete="off" />
+    </label>
+    <div id="sugestoes-paciente" class="autocomplete-sugestoes" hidden></div>
+    <div id="ficha-paciente-selecionado" class="ficha-preview" hidden></div>
+    <input type="hidden" name="paciente_id" id="paciente_id" />
+
+    <p class="ou-divisor">— ou cadastre um paciente novo —</p>
+    <label>
+      Nome do paciente novo
+      <input type="text" name="paciente_novo_nome" id="paciente_novo_nome" />
+    </label>
+    <label>
+      Telefone do paciente novo
+      <input type="text" name="paciente_novo_telefone" id="paciente_novo_telefone" placeholder="(11) 98888-7777" />
+    </label>
+    <label>
+      Convênio do paciente novo
+      <select name="paciente_novo_convenio_id" id="paciente_novo_convenio_id">
+        <option value="">Nenhum / particular</option>
+        <% convenios.forEach((c) => { %>
+        <option value="<%= c.id %>"><%= c.nome %></option>
+        <% }) %>
+      </select>
+    </label>
+  </fieldset>
+
+  <div class="toolbar">
+    <button type="submit">Criar agendamento</button>
+  </div>
+</form>
+
+<aside class="panel historico-paciente-painel" id="historico-paciente-painel" hidden>
+  <h2>Histórico do paciente</h2>
+  <div>
+    <h3>Próximos agendamentos</h3>
+    <p class="historico-vazio" id="historico-futuros-vazio" hidden>Nenhum agendamento futuro.</p>
+    <ul id="historico-futuros"></ul>
+  </div>
+  <div>
+    <h3>Últimos atendimentos</h3>
+    <p class="historico-vazio" id="historico-recentes-vazio" hidden>Nenhum atendimento anterior.</p>
+    <ul id="historico-recentes"></ul>
+  </div>
+</aside>
+</div>
+
+<script>
+  (function () {
+    const tipoAtendimento = document.getElementById("tipo_atendimento");
+    const psicologoLabel = document.getElementById("psicologo-label");
+    const fisioterapeutaLabel = document.getElementById("fisioterapeuta-label");
+
+    function atualizarVisibilidadeProfissional() {
+      psicologoLabel.hidden = tipoAtendimento.value !== "psicologia";
+      fisioterapeutaLabel.hidden = tipoAtendimento.value !== "fisioterapia";
+    }
+    tipoAtendimento.addEventListener("change", atualizarVisibilidadeProfissional);
+    atualizarVisibilidadeProfissional();
+
+    const busca = document.getElementById("busca-paciente");
+    const sugestoes = document.getElementById("sugestoes-paciente");
+    const fichaPreview = document.getElementById("ficha-paciente-selecionado");
+    const pacienteIdInput = document.getElementById("paciente_id");
+    const nomeNovoInput = document.getElementById("paciente_novo_nome");
+    const telefoneNovoInput = document.getElementById("paciente_novo_telefone");
+    const repetirCheckbox = document.getElementById("repetir_semanalmente");
+    const quantidadeLabel = document.getElementById("quantidade-sessoes-label");
+    let temporizador = null;
+
+    // Datas avulsas (dias/horários diferentes entre si) são uma alternativa
+    // à repetição semanal automática — as duas juntas não fazem sentido,
+    // então uma desativa a outra.
+    const datasAvulsasLista = document.getElementById("datas-avulsas-lista");
+    const botaoAdicionarDataAvulsa = document.getElementById("adicionar-data-avulsa");
+
+    function temDatasAvulsas() {
+      return datasAvulsasLista.children.length > 0;
+    }
+
+    function atualizarExclusaoMutua() {
+      repetirCheckbox.disabled = temDatasAvulsas();
+      botaoAdicionarDataAvulsa.disabled = repetirCheckbox.checked;
+    }
+
+    function adicionarLinhaDataAvulsa() {
+      const linha = document.createElement("div");
+      linha.className = "data-avulsa-linha";
+      linha.innerHTML =
+        '<label>Data<input type="date" name="datas_extras_data" required></label>' +
+        '<label>Hora<input type="time" name="datas_extras_hora" required></label>' +
+        '<button type="button" class="button button--quiet">Remover</button>';
+      linha.querySelector("button").addEventListener("click", () => {
+        linha.remove();
+        atualizarExclusaoMutua();
+      });
+      datasAvulsasLista.append(linha);
+      atualizarExclusaoMutua();
+    }
+
+    botaoAdicionarDataAvulsa.addEventListener("click", adicionarLinhaDataAvulsa);
+
+    repetirCheckbox.addEventListener("change", () => {
+      quantidadeLabel.hidden = !repetirCheckbox.checked;
+      atualizarExclusaoMutua();
+    });
+
+    const historicoPainel = document.getElementById("historico-paciente-painel");
+    const historicoFuturosLista = document.getElementById("historico-futuros");
+    const historicoFuturosVazio = document.getElementById("historico-futuros-vazio");
+    const historicoRecentesLista = document.getElementById("historico-recentes");
+    const historicoRecentesVazio = document.getElementById("historico-recentes-vazio");
+
+    const ROTULO_STATUS = {
+      confirmado: "Aguardando",
+      compareceu: "Compareceu",
+      faltou: "Faltou",
+      cancelado: "Cancelado",
+    };
+    const ROTULO_TIPO = { fisioterapia: "Fisioterapia", psicologia: "Psicologia" };
+
+    function montarItemHistorico(item) {
+      const li = document.createElement("li");
+      const [ano, mes, dia] = item.data.split("-");
+      li.textContent =
+        `${dia}/${mes}/${ano} ${String(item.hora).slice(0, 5)} — ` +
+        `${ROTULO_TIPO[item.tipo_atendimento] ?? item.tipo_atendimento}` +
+        (ROTULO_STATUS[item.status] ? ` (${ROTULO_STATUS[item.status]})` : "");
+      return li;
+    }
+
+    function preencherLista(lista, vazio, itens) {
+      lista.replaceChildren(...itens.map(montarItemHistorico));
+      vazio.hidden = itens.length > 0;
+    }
+
+    async function carregarHistoricoPaciente(pacienteId) {
+      historicoPainel.hidden = false;
+      preencherLista(historicoFuturosLista, historicoFuturosVazio, []);
+      preencherLista(historicoRecentesLista, historicoRecentesVazio, []);
+      try {
+        const resposta = await fetch(`/api/pacientes/${pacienteId}/historico-resumo`);
+        if (!resposta.ok) return;
+        const { futuros, recentes } = await resposta.json();
+        preencherLista(historicoFuturosLista, historicoFuturosVazio, futuros);
+        preencherLista(historicoRecentesLista, historicoRecentesVazio, recentes);
+      } catch {
+        // Painel é só informativo — falha em carregar não pode travar o
+        // agendamento em si, então ignora e deixa as listas vazias.
+      }
+    }
+
+    function limparSelecao() {
+      pacienteIdInput.value = "";
+      fichaPreview.hidden = true;
+      fichaPreview.replaceChildren();
+      historicoPainel.hidden = true;
+    }
+
+    busca.addEventListener("input", () => {
+      limparSelecao();
+      clearTimeout(temporizador);
+      const termo = busca.value.trim();
+      if (termo.length < 2) {
+        sugestoes.hidden = true;
+        sugestoes.replaceChildren();
+        return;
+      }
+      temporizador = setTimeout(async () => {
+        const resposta = await fetch("/api/pacientes/busca?q=" + encodeURIComponent(termo));
+        const resultados = await resposta.json();
+        const botoes = resultados.map((p) => {
+          const botao = document.createElement("button");
+          botao.type = "button";
+          botao.className = "sugestao-item";
+          botao.dataset.id = p.id;
+          botao.dataset.nome = p.nome;
+          botao.dataset.telefone = p.telefone;
+          botao.dataset.convenio = p.convenio || "";
+          botao.dataset.total = p.total_consultas;
+          botao.dataset.ultima = p.ultima_consulta || "";
+          botao.textContent = p.nome + " — " + p.telefone + (p.convenio ? " (" + p.convenio + ")" : "");
+          return botao;
+        });
+        sugestoes.replaceChildren(...botoes);
+        sugestoes.hidden = resultados.length === 0;
+      }, 250);
+    });
+
+    sugestoes.addEventListener("click", (evento) => {
+      const item = evento.target.closest(".sugestao-item");
+      if (!item) return;
+      pacienteIdInput.value = item.dataset.id;
+      busca.value = item.dataset.nome;
+      sugestoes.hidden = true;
+      nomeNovoInput.value = "";
+      telefoneNovoInput.value = "";
+      fichaPreview.hidden = false;
+
+      const nomeForte = document.createElement("strong");
+      nomeForte.textContent = item.dataset.nome;
+      const linha1Resto = document.createTextNode(
+        " — " + item.dataset.telefone + (item.dataset.convenio ? " · " + item.dataset.convenio : "")
+      );
+      const linha2 = document.createTextNode(
+        item.dataset.total + " consulta(s)" + (item.dataset.ultima ? " · última em " + item.dataset.ultima : "")
+      );
+
+      fichaPreview.replaceChildren(nomeForte, linha1Resto, document.createElement("br"), linha2);
+      carregarHistoricoPaciente(item.dataset.id);
+    });
+  })();
+</script>
+
+<%- include("../partials/footer") %>

@@ -1,0 +1,63 @@
+<%- include("../partials/header", { titulo: "Pacientes" }) %>
+<section class="patient-list">
+  <header class="page-header">
+    <div>
+      <h1>Pacientes</h1>
+      <p class="patient-list-summary">Consulte os cadastros e acesse a ficha clínica de cada paciente.</p>
+    </div>
+    <a class="button" href="/pacientes/novo">Novo paciente</a>
+  </header>
+  <% if (mensagemExclusao) { %>
+  <p class="sucesso"><%= mensagemExclusao %></p>
+  <% } %>
+  <form class="filter-bar" method="get" action="/pacientes">
+    <label>
+      Nome ou telefone
+      <input type="text" name="busca" value="<%= busca %>" />
+    </label>
+    <label>
+      Avaliação
+      <select name="avaliacao">
+        <option value="">Todos</option>
+        <option value="avaliacao" <%= avaliacao === "avaliacao" ? "selected" : "" %>>Avaliação</option>
+        <option value="retorno" <%= avaliacao === "retorno" ? "selected" : "" %>>Retorno</option>
+      </select>
+    </label>
+    <button type="submit">Buscar</button>
+    <% if (busca || avaliacao) { %>
+    <a class="button button--quiet" href="/pacientes">Limpar filtros</a>
+    <% } %>
+  </form>
+  <div class="panel patient-list-panel">
+    <div class="patient-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nome</th><th>Telefone</th><th>Convênio</th><th>Cadastrado em</th>
+            <th><span class="sr-only">Ações</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% pacientes.forEach((p) => { %>
+          <tr>
+            <td><strong><%= p.nome %></strong></td>
+            <td><%= p.telefone %></td>
+            <td><%= p.convenio ?? "—" %></td>
+            <td><%= formatarDataHora(p.created_at) %></td>
+            <td><a class="button button--quiet" href="/pacientes/<%= p.id %>/ficha">Ver ficha</a></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="paginacao">
+    <% if (offsetAtual > 0) { %>
+    <a class="button button--quiet" href="/pacientes?limite=<%= limiteAtual %>&offset=<%= Math.max(offsetAtual - limiteAtual, 0) %>&busca=<%= busca %>&avaliacao=<%= avaliacao %>">Anterior</a>
+    <% } %>
+    <% if (temProximaPagina) { %>
+    <a class="button button--quiet" href="/pacientes?limite=<%= limiteAtual %>&offset=<%= offsetAtual + limiteAtual %>&busca=<%= busca %>&avaliacao=<%= avaliacao %>">Próxima</a>
+    <% } %>
+  </p>
+</section>
+<%- include("../partials/footer") %>

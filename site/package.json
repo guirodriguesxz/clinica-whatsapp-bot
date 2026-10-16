@@ -1,0 +1,14 @@
+{
+  "name": "clinicaexemplo-public-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "start": "docker compose up -d",
+    "stop": "docker compose down",
+    "bootstrap": "bash scripts/bootstrap.sh",
+    "smoke": "bash scripts/smoke-test.sh",
+    "package-theme": "bash scripts/package-theme.sh"
+  }
+}
+

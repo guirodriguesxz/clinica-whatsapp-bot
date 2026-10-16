@@ -1,0 +1,7 @@
+dist/
+qa/reports/
+.env
+wp-content/index.php
+wp-content/plugins/
+wp-content/uploads/
+wp-content/themes/index.php

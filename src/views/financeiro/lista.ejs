@@ -1,0 +1,202 @@
+<!-- src/views/financeiro/lista.ejs -->
+<%- include("../partials/header", { titulo: "Financeiro" }) %>
+<header class="page-header">
+  <div>
+    <h1>Financeiro</h1>
+    <p class="agenda-summary"><%= itens.length %> atendimento(s) nesta página</p>
+  </div>
+  <a class="button button--quiet" href="/financeiro/relatorio">Ver relatório mensal</a>
+  <a class="button button--quiet" href="/financeiro/tiss">TISS eletrônico</a>
+</header>
+
+<div class="panel finance-price-guide">
+  <h2>Valores de referência — Fisioterapia particular</h2>
+  <dl class="ficha-cadastral">
+    <div><dt>Sessão avulsa</dt><dd>A partir de R$ 70,00</dd></div>
+    <div><dt>Avaliação</dt><dd>R$ 40,00</dd></div>
+    <div><dt>Pacote de 10 sessões</dt><dd>A partir de R$ 600,00 (avaliação inclusa)</dd></div>
+    <div><dt>Psicologia</dt><dd>Valores combinados diretamente com a equipe</dd></div>
+  </dl>
+</div>
+
+<% const filtrosAtuais = typeof filtros !== "undefined" ? filtros : {}; const queryFinanceiro = new URLSearchParams(Object.entries(filtrosAtuais).filter(([,valor]) => valor)); if (filtroData) queryFinanceiro.set("data", filtroData); %>
+<form class="filter-bar" method="get" action="/financeiro">
+  <label>Filtrar por data<input type="date" name="data" value="<%= filtroData ?? '' %>" /></label>
+  <label>Paciente<input name="busca" type="search" value="<%= filtrosAtuais.busca ?? '' %>" placeholder="Buscar paciente" /></label>
+  <label>De<input name="inicio" type="date" value="<%= filtrosAtuais.inicio ?? '' %>" /></label>
+  <label>Até<input name="fim" type="date" value="<%= filtrosAtuais.fim ?? '' %>" /></label>
+  <% for (const [campo, titulo, opcoes] of [
+    ['status', 'Pagamento', [['pago','Pago'],['pendente','Pendente'],['aguardando_reembolso','Aguardando reembolso'],['estornado','Estornado']]],
+    ['formaPagamento', 'Forma', [['pix','Pix'],['cartao','Cartão'],['convenio','Convênio']]],
+    ['origem', 'Origem', [['bot','Bot / Manual'],['importado','Importado']]]
+  ]) { %>
+  <label><%= titulo %><select name="<%= campo %>"><option value="">Todos</option><% for (const [valor, texto] of opcoes) { %><option value="<%= valor %>" <%= filtrosAtuais[campo] === valor ? 'selected' : '' %>><%= texto %></option><% } %></select></label>
+  <% } %>
+  <button type="submit">Filtrar</button>
+  <% if (filtroData || Object.values(filtrosAtuais).some(Boolean)) { %>
+  <a class="button button--quiet" href="/financeiro">Limpar filtro</a>
+  <% } %>
+</form>
+
+<div class="panel finance-list">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Hora</th>
+        <th>Paciente</th>
+        <th>Tipo</th>
+        <th>Origem</th>
+        <th>Pagamentos</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% let dataAnterior = null; %>
+      <% itens.forEach((item) => {
+        const mostraCabecalhoDia = item.data !== dataAnterior;
+        dataAnterior = item.data;
+        const classePeriodo = item.hora < "12:00:00" ? "is-manha" : "is-tarde";
+      %>
+      <% if (mostraCabecalhoDia) { %>
+      <tr class="finance-day-header">
+        <th colspan="6"><%= formatarDataExtensa(item.data) %></th>
+      </tr>
+      <% } %>
+      <tr class="<%= classePeriodo %>">
+        <td><%= item.data %></td>
+        <td><%= item.hora %></td>
+        <td><%= item.paciente_nome %></td>
+        <td><%= item.tipo_atendimento %></td>
+        <td><%= item.origem === "bot" ? "Bot" : "Importado" %></td>
+        <td>
+          <% if (item.pagamentos.length) { %>
+          <ul class="payment-history">
+            <% item.pagamentos.forEach((p) => { %>
+            <%
+              // parcelas e valor_acrescimo são independentes (cartão pode ter
+              // só um dos dois) — cada parte só entra se o próprio valor
+              // existir, sem depender da outra (evita "(3x, +R$ )" e afins).
+              // valor_acrescimo pode legitimamente ser 0 (CHECK >= 0), então
+              // a checagem é "!= null", não truthy.
+              //
+              // formatarMoeda: p.valor e p.valor_acrescimo vêm de dentro de um
+              // json_build_object (listarFinanceiro), então o driver pg faz
+              // JSON.parse e chegam como JS number (ex: 150.5, sem zero à
+              // direita). formatarMoeda normaliza esse valor para duas casas.
+              const ehEstorno = p.tipo_lancamento === "estorno";
+              const elegivelParaEstorno = !ehEstorno && p.status !== "estornado" && !p.estornado_por;
+              const partesPagamento = [
+                p.parcelas != null ? `${p.parcelas}x` : null,
+                p.valor_acrescimo != null ? `+R$ ${formatarMoeda(p.valor_acrescimo)}` : null,
+              ].filter((parte) => parte !== null);
+              const classesEntrada = ["payment-entry", ehEstorno ? "refund-entry" : null]
+                .filter(Boolean)
+                .join(" ");
+            %>
+            <li>
+              <details class="<%= classesEntrada %>">
+                <summary>
+                  <span class="financial-amount">R$ <%= formatarMoeda(p.valor) %></span>
+                  — <%= p.forma_pagamento %><% if (partesPagamento.length) { %> (<%= partesPagamento.join(", ") %>)<% } %>
+                  —
+                  <% if (ehEstorno) { %>
+                  <span class="badge-estornado">Estorno do pagamento #<%= p.pagamento_origem_id %></span>
+                  <% } else if (p.estornado_por || p.status === "estornado") { %>
+                  <span class="badge-estornado">Pagamento estornado</span>
+                  <% } else if (p.status === "pago") { %>
+                  <span class="badge is-success">Pago</span>
+                  <% } else if (p.status === "pendente") { %>
+                  <span class="badge is-warning">Pendente</span>
+                  <% } else if (p.status === "aguardando_reembolso") { %>
+                  <span class="badge is-warning">Aguardando reembolso</span>
+                  <% } else { %>
+                  <span class="badge"><%= p.status %></span>
+                  <% } %>
+                  — <%= p.data %>
+                </summary>
+                <% if (p.forma_pagamento === "convenio" && !ehEstorno) { %>
+                <p><a href="/financeiro/pagamento/<%= p.id %>/guia">Gerar guia</a></p>
+                <% } %>
+                <% if (ehEstorno) { %>
+                <p class="registro-info">Estorno registrado por <%=
+                  p.registrado_por_nome ||
+                  (p.registrado_por ? `usuário #${p.registrado_por}` : "usuário não identificado")
+                %></p>
+                <% } %>
+                <% if (p.observacao) { %><p><em><%= p.observacao %></em></p><% } %>
+                <% if (elegivelParaEstorno) { %>
+                <details class="refund-entry">
+                  <summary>Estornar pagamento</summary>
+                  <form
+                    method="post"
+                    action="/financeiro/pagamento/<%= p.id %>/estornar"
+                    onsubmit="return confirm('Confirma o estorno deste pagamento?')"
+                  >
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <label>Data do estorno<input type="date" name="data" required /></label>
+                    <label>Observação<input type="text" name="observacao" /></label>
+                    <button type="submit">Estornar</button>
+                  </form>
+                </details>
+                <% } %>
+              </details>
+            </li>
+            <% }) %>
+          </ul>
+          <% } %>
+          <details class="payment-entry">
+            <summary>Registrar pagamento</summary>
+            <form
+              method="post"
+              action="/financeiro/<%= item.origem === 'bot' ? 'agendamento' : 'importado' %>/<%= item.id %>"
+            >
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <div class="form-grid">
+                <label>Valor<input type="number" name="valor" step="0.01" min="0.01" required /></label>
+                <label
+                  >Forma
+                  <select name="forma_pagamento" required>
+                    <option value="pix">Pix</option>
+                    <option value="cartao">Cartão</option>
+                    <option value="convenio">Convênio</option>
+                  </select>
+                </label>
+                <label>Parcelas (só cartão)<input type="number" name="parcelas" min="1" /></label>
+                <label>Acréscimo (só cartão)<input type="number" name="valor_acrescimo" step="0.01" min="0" /></label>
+                <label
+                  >Status
+                  <select name="status" required>
+                    <option value="pago">Pago</option>
+                    <option value="pendente">Pendente</option>
+                    <option value="aguardando_reembolso">Aguardando reembolso</option>
+                  </select>
+                </label>
+                <label>Data do pagamento<input type="date" name="data" required /></label>
+                <label>Observação<input type="text" name="observacao" /></label>
+              </div>
+              <button type="submit">Adicionar pagamento</button>
+            </form>
+          </details>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<p class="paginacao">
+  <% if (offsetAtual > 0) { %>
+  <a
+    class="button button--quiet"
+    href="/financeiro?limite=<%= limiteAtual %>&offset=<%= Math.max(offsetAtual - limiteAtual, 0) %>&<%= queryFinanceiro.toString() %>"
+    >Anterior</a
+  >
+  <% } %>
+  <% if (temProximaPagina) { %>
+  <a
+    class="button button--quiet"
+    href="/financeiro?limite=<%= limiteAtual %>&offset=<%= offsetAtual + limiteAtual %>&<%= queryFinanceiro.toString() %>"
+    >Próxima</a
+  >
+  <% } %>
+</p>
+<%- include("../partials/footer") %>

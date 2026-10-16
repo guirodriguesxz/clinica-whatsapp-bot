@@ -1,0 +1,69 @@
+<!-- src/views/psicologos/lista.ejs -->
+<%- include("../partials/header", { titulo: "Psicólogos" }) %>
+<section class="user-list">
+  <header class="page-header">
+    <div>
+      <h1>Psicólogos</h1>
+      <p class="patient-list-summary">Cadastro dos psicólogos da clínica.</p>
+    </div>
+    <div class="toolbar">
+      <% if (mostrarTodos) { %>
+      <a class="button button--quiet" href="/psicologos">Mostrar só ativos</a>
+      <% } else { %>
+      <a class="button button--quiet" href="/psicologos?todos=1">Mostrar inativos</a>
+      <% } %>
+      <a class="button button--quiet" href="/psicologos/termo-ciencia" target="_blank">Imprimir Termo de Ciência</a>
+      <a class="button" href="/psicologos/novo">Novo psicólogo</a>
+    </div>
+  </header>
+  <% if (sucesso) { %>
+  <p class="sucesso">Alteração salva com sucesso.</p>
+  <% } %>
+  <div class="panel user-list-panel">
+    <div class="patient-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th></th><th>Nome</th><th>Status</th><th>Ações</th></tr>
+        </thead>
+        <tbody>
+          <% for (const psicologo of psicologos) { %>
+          <tr>
+            <td>
+              <% if (psicologo.temFoto) { %>
+              <img src="/psicologos/<%= psicologo.id %>/foto" alt="Foto de <%= psicologo.nome %>" class="photo-thumb" />
+              <% } else { %>
+              <span class="photo-thumb photo-thumb--vazio" aria-hidden="true"></span>
+              <% } %>
+            </td>
+            <td><%= psicologo.nome %></td>
+            <td><span class="badge <%= psicologo.ativo ? 'is-success' : 'is-danger' %>"><%= psicologo.ativo ? "Ativo" : "Inativo" %></span></td>
+            <td>
+              <div class="user-row-actions">
+                <a class="button button--quiet" href="/psicologos/<%= psicologo.id %>/editar<%= mostrarTodos ? '?todos=1' : '' %>">Editar</a>
+                <% if (psicologo.ativo) { %>
+                <form method="post" action="/psicologos/<%= psicologo.id %>/desativar">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <% if (mostrarTodos) { %>
+                  <input type="hidden" name="todos" value="1" />
+                  <% } %>
+                  <button class="button is-danger" type="submit">Desativar</button>
+                </form>
+                <% } else { %>
+                <form method="post" action="/psicologos/<%= psicologo.id %>/reativar">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <% if (mostrarTodos) { %>
+                  <input type="hidden" name="todos" value="1" />
+                  <% } %>
+                  <button class="button" type="submit">Reativar</button>
+                </form>
+                <% } %>
+              </div>
+            </td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<%- include("../partials/footer") %>

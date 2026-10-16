@@ -1,0 +1,35 @@
+<!-- src/views/baseConhecimento/novo.ejs -->
+<%- include("../partials/header", { titulo: "Nova entrada — Base de conhecimento" }) %>
+<header class="page-header">
+  <div>
+    <h1>Nova entrada</h1>
+    <p>Cadastre uma pergunta e resposta que o bot pode usar pra responder pacientes.</p>
+  </div>
+  <a class="button button--quiet" href="/base-conhecimento">Voltar</a>
+</header>
+
+<form class="focused-form" method="post" action="/base-conhecimento/novo">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <% if (typeof sugestaoId !== "undefined" && sugestaoId) { %>
+  <input type="hidden" name="sugestaoId" value="<%= sugestaoId %>" />
+  <% } %>
+  <% if (erro) { %>
+  <p class="erro"><%= erro %></p>
+  <% } %>
+  <div class="form-grid">
+    <label>Pergunta<textarea name="pergunta" rows="2" required><%= typeof perguntaSugerida !== "undefined" ? perguntaSugerida : "" %></textarea></label>
+    <label>Resposta<textarea name="resposta" rows="4" required></textarea></label>
+    <label>Categoria
+      <select name="categoria">
+        <option value="">Sem categoria</option>
+        <% for (const categoria of categorias) { %>
+        <option value="<%= categoria.valor %>"><%= categoria.rotulo %></option>
+        <% } %>
+      </select>
+    </label>
+  </div>
+  <div class="toolbar">
+    <button type="submit">Criar</button>
+  </div>
+</form>
+<%- include("../partials/footer") %>

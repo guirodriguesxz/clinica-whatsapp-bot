@@ -1,0 +1,74 @@
+<%- include("../partials/header", { titulo: "TISS eletrônico" }) %>
+<header class="page-header">
+  <div>
+    <h1>TISS eletrônico — lote de guias</h1>
+    <p>Gera o XML de lote de guias SP/SADT pra upload manual no portal do convênio.</p>
+  </div>
+  <a class="button button--quiet" href="/financeiro">Voltar</a>
+</header>
+
+<form class="focused-form" method="get" action="/financeiro/tiss">
+  <div class="form-grid">
+    <label>Convênio
+      <select name="convenioId" required>
+        <option value="">Selecione</option>
+        <% convenios.forEach(function (c) { %>
+        <option value="<%= c.id %>" <%= String(c.id) === convenioId ? 'selected' : '' %>><%= c.nome %></option>
+        <% }) %>
+      </select>
+    </label>
+    <label>Início<input type="date" name="inicio" value="<%= inicio %>" required /></label>
+    <label>Fim<input type="date" name="fim" value="<%= fim %>" required /></label>
+    <label>Caráter do atendimento
+      <select name="carater">
+        <option value="eletiva" <%= carater === 'eletiva' ? 'selected' : '' %>>Eletiva</option>
+        <option value="urgencia" <%= carater === 'urgencia' ? 'selected' : '' %>>Urgência</option>
+      </select>
+    </label>
+  </div>
+  <div class="toolbar">
+    <button type="submit">Consultar</button>
+  </div>
+</form>
+
+<% if (preview) { %>
+<section>
+  <h2><%= preview.convenio.nome %> — <%= preview.prontas.length %> guia<%= preview.prontas.length === 1 ? '' : 's' %> pronta<%= preview.prontas.length === 1 ? '' : 's' %>, <%= preview.incompletas.length %> guia<%= preview.incompletas.length === 1 ? '' : 's' %> incompleta<%= preview.incompletas.length === 1 ? '' : 's' %></h2>
+
+  <% if (preview.motivosBloqueio.length > 0) { %>
+  <p class="erro">
+    Não é possível gerar o lote — faltam dados de cadastro:
+    <ul>
+      <% if (preview.motivosBloqueio.includes('dados_prestador_incompletos')) { %>
+      <li>Dados do prestador (CNES/CNPJ) — <a href="/configuracoes/prestador">cadastrar</a>.</li>
+      <% } %>
+      <% if (preview.motivosBloqueio.includes('codigo_prestador_na_operadora_ausente')) { %>
+      <li>Código do prestador na operadora — <a href="/convenios/<%= preview.convenio.id %>/editar">cadastrar no convênio</a>.</li>
+      <% } %>
+      <% if (preview.motivosBloqueio.includes('numero_contrato_ausente')) { %>
+      <li>Número de contrato — <a href="/convenios/<%= preview.convenio.id %>/editar">cadastrar no convênio</a>.</li>
+      <% } %>
+    </ul>
+  </p>
+  <% } else if (preview.prontas.length > 0) { %>
+  <p class="toolbar">
+    <a class="button" href="/financeiro/tiss/lote?convenioId=<%= convenioId %>&inicio=<%= inicio %>&fim=<%= fim %>&carater=<%= carater %>">Gerar XML do lote</a>
+  </p>
+  <% } else { %>
+  <p>Nenhuma guia pronta no período selecionado.</p>
+  <% } %>
+
+  <% if (preview.incompletas.length > 0) { %>
+  <h3>Guias incompletas (fora do lote)</h3>
+  <ul>
+    <% preview.incompletas.forEach(function (g) { %>
+    <li>
+      Pagamento #<%= g.pagamento_id %> —
+      <%= g.motivo === 'paciente_sem_matricula' ? 'paciente sem matrícula de convênio' : 'código TUSS não cadastrado para esse tipo de atendimento/categoria' %>
+    </li>
+    <% }) %>
+  </ul>
+  <% } %>
+</section>
+<% } %>
+<%- include("../partials/footer") %>

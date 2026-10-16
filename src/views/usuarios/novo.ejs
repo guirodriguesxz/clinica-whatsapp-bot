@@ -1,0 +1,26 @@
+<!-- src/views/usuarios/novo.ejs -->
+<%- include("../partials/header", { titulo: "Novo usuário" }) %>
+<header class="page-header">
+  <div>
+    <h1>Novo usuário de recepção</h1>
+    <p>Crie uma conta de acesso para a recepção.</p>
+  </div>
+  <a class="button button--quiet" href="/usuarios">Voltar</a>
+</header>
+
+<form class="focused-form" method="post" action="/usuarios">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <% if (erro) { %>
+  <p class="erro"><%= erro %></p>
+  <% } %>
+  <div class="form-grid">
+    <label>Nome<input type="text" name="nome" required /></label>
+    <label>Nome de usuário<input type="text" name="nome_usuario" required autocomplete="username" /></label>
+    <label>Senha<input type="password" name="senha" required minlength="8" /></label>
+    <label>Confirmar senha<input type="password" name="confirmacao_senha" required minlength="8" /></label>
+  </div>
+  <div class="toolbar">
+    <button type="submit">Criar</button>
+  </div>
+</form>
+<%- include("../partials/footer") %>

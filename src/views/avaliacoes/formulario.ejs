@@ -1,0 +1,60 @@
+<!-- src/views/avaliacoes/formulario.ejs -->
+<%- include("../partials/header", { titulo: avaliacao ? "Editar avaliação" : "Nova avaliação" }) %>
+<header class="page-header">
+  <div>
+    <h1><%= avaliacao ? "Editar avaliação" : "Nova avaliação" %></h1>
+    <p>Paciente: <%= paciente.nome %></p>
+  </div>
+  <a class="button button--quiet" href="/pacientes/<%= paciente.id %>/ficha">Voltar para a ficha</a>
+</header>
+
+<form class="focused-form" method="post" action="<%= acaoForm %>">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <% if (erro) { %>
+  <p class="erro"><%= erro %></p>
+  <% } %>
+
+  <div class="form-grid">
+    <label>Data da avaliação<input type="date" name="data_avaliacao" value="<%= avaliacao?.dataAvaliacao ?? '' %>" required /></label>
+  </div>
+
+  <fieldset>
+    <legend>Anamnese</legend>
+    <div class="form-grid">
+      <% const opcoesSimNao = ["Sim", "Não"]; %>
+      <% const valorSimNao = (valor) => String(valor ?? "").trim(); %>
+      <label>Está grávida?<select name="esta_gravida"><option value="">Não informado</option><% opcoesSimNao.forEach((opcao) => { %><option value="<%= opcao %>" <%= valorSimNao(avaliacao?.estaGravida) === opcao ? "selected" : "" %>><%= opcao %></option><% }) %><% if (valorSimNao(avaliacao?.estaGravida) && !opcoesSimNao.includes(valorSimNao(avaliacao?.estaGravida))) { %><option value="<%= valorSimNao(avaliacao?.estaGravida) %>" selected><%= valorSimNao(avaliacao?.estaGravida) %></option><% } %></select></label>
+      <label>Possui marcapasso?<select name="possui_marcapasso"><option value="">Não informado</option><% opcoesSimNao.forEach((opcao) => { %><option value="<%= opcao %>" <%= valorSimNao(avaliacao?.possuiMarcapasso) === opcao ? "selected" : "" %>><%= opcao %></option><% }) %><% if (valorSimNao(avaliacao?.possuiMarcapasso) && !opcoesSimNao.includes(valorSimNao(avaliacao?.possuiMarcapasso))) { %><option value="<%= valorSimNao(avaliacao?.possuiMarcapasso) %>" selected><%= valorSimNao(avaliacao?.possuiMarcapasso) %></option><% } %></select></label>
+      <label>Possui prótese metálica ou implantes?<select name="possui_protese_metalica_implantes"><option value="">Não informado</option><% opcoesSimNao.forEach((opcao) => { %><option value="<%= opcao %>" <%= valorSimNao(avaliacao?.possuiProteseMetalicaImplantes) === opcao ? "selected" : "" %>><%= opcao %></option><% }) %><% if (valorSimNao(avaliacao?.possuiProteseMetalicaImplantes) && !opcoesSimNao.includes(valorSimNao(avaliacao?.possuiProteseMetalicaImplantes))) { %><option value="<%= valorSimNao(avaliacao?.possuiProteseMetalicaImplantes) %>" selected><%= valorSimNao(avaliacao?.possuiProteseMetalicaImplantes) %></option><% } %></select></label>
+      <label>Possui doenças cardíacas?<select name="possui_doencas_cardiacas"><option value="">Não informado</option><% opcoesSimNao.forEach((opcao) => { %><option value="<%= opcao %>" <%= valorSimNao(avaliacao?.possuiDoencasCardiacas) === opcao ? "selected" : "" %>><%= opcao %></option><% }) %><% if (valorSimNao(avaliacao?.possuiDoencasCardiacas) && !opcoesSimNao.includes(valorSimNao(avaliacao?.possuiDoencasCardiacas))) { %><option value="<%= valorSimNao(avaliacao?.possuiDoencasCardiacas) %>" selected><%= valorSimNao(avaliacao?.possuiDoencasCardiacas) %></option><% } %></select></label>
+      <label>Possui hipertensão arterial?<select name="possui_hipertensao_arterial"><option value="">Não informado</option><% opcoesSimNao.forEach((opcao) => { %><option value="<%= opcao %>" <%= valorSimNao(avaliacao?.possuiHipertensaoArterial) === opcao ? "selected" : "" %>><%= opcao %></option><% }) %><% if (valorSimNao(avaliacao?.possuiHipertensaoArterial) && !opcoesSimNao.includes(valorSimNao(avaliacao?.possuiHipertensaoArterial))) { %><option value="<%= valorSimNao(avaliacao?.possuiHipertensaoArterial) %>" selected><%= valorSimNao(avaliacao?.possuiHipertensaoArterial) %></option><% } %></select></label>
+      <label>Possui diabetes?<select name="possui_diabetes"><option value="">Não informado</option><% opcoesSimNao.forEach((opcao) => { %><option value="<%= opcao %>" <%= valorSimNao(avaliacao?.possuiDiabetes) === opcao ? "selected" : "" %>><%= opcao %></option><% }) %><% if (valorSimNao(avaliacao?.possuiDiabetes) && !opcoesSimNao.includes(valorSimNao(avaliacao?.possuiDiabetes))) { %><option value="<%= valorSimNao(avaliacao?.possuiDiabetes) %>" selected><%= valorSimNao(avaliacao?.possuiDiabetes) %></option><% } %></select></label>
+      <label>Possui epilepsia?<select name="possui_epilepsia"><option value="">Não informado</option><% opcoesSimNao.forEach((opcao) => { %><option value="<%= opcao %>" <%= valorSimNao(avaliacao?.possuiEpilepsia) === opcao ? "selected" : "" %>><%= opcao %></option><% }) %><% if (valorSimNao(avaliacao?.possuiEpilepsia) && !opcoesSimNao.includes(valorSimNao(avaliacao?.possuiEpilepsia))) { %><option value="<%= valorSimNao(avaliacao?.possuiEpilepsia) %>" selected><%= valorSimNao(avaliacao?.possuiEpilepsia) %></option><% } %></select></label>
+      <label>Possui histórico de câncer?<select name="possui_historico_cancer"><option value="">Não informado</option><% opcoesSimNao.forEach((opcao) => { %><option value="<%= opcao %>" <%= valorSimNao(avaliacao?.possuiHistoricoCancer) === opcao ? "selected" : "" %>><%= opcao %></option><% }) %><% if (valorSimNao(avaliacao?.possuiHistoricoCancer) && !opcoesSimNao.includes(valorSimNao(avaliacao?.possuiHistoricoCancer))) { %><option value="<%= valorSimNao(avaliacao?.possuiHistoricoCancer) %>" selected><%= valorSimNao(avaliacao?.possuiHistoricoCancer) %></option><% } %></select></label>
+      <label>Faz uso de medicamentos contínuos? Quais?<input type="text" name="medicamentos_continuos_quais" value="<%= avaliacao?.medicamentosContinuosQuais ?? '' %>" /></label>
+      <label>Já realizou cirurgia? Qual?<input type="text" name="cirurgia_qual" value="<%= avaliacao?.cirurgiaQual ?? '' %>" /></label>
+      <label>Quando?<input type="text" name="cirurgia_quando" value="<%= avaliacao?.cirurgiaQuando ?? '' %>" /></label>
+      <label>Quanto tempo da última cirurgia?<input type="text" name="tempo_ultima_cirurgia" value="<%= avaliacao?.tempoUltimaCirurgia ?? '' %>" /></label>
+      <label>Sente dor atualmente? Local<input type="text" name="dor_atual_local" value="<%= avaliacao?.dorAtualLocal ?? '' %>" /></label>
+      <label>Intensidade da dor (0-10)<input type="text" name="dor_atual_intensidade" value="<%= avaliacao?.dorAtualIntensidade ?? '' %>" /></label>
+      <label>Apresenta limitações funcionais? Quais?<input type="text" name="limitacoes_funcionais_quais" value="<%= avaliacao?.limitacoesFuncionaisQuais ?? '' %>" /></label>
+      <label>Já realizou fisioterapia anteriormente?<select name="fisioterapia_anteriormente"><option value="">Não informado</option><% opcoesSimNao.forEach((opcao) => { %><option value="<%= opcao %>" <%= valorSimNao(avaliacao?.fisioterapiaAnteriormente) === opcao ? "selected" : "" %>><%= opcao %></option><% }) %><% if (valorSimNao(avaliacao?.fisioterapiaAnteriormente) && !opcoesSimNao.includes(valorSimNao(avaliacao?.fisioterapiaAnteriormente))) { %><option value="<%= valorSimNao(avaliacao?.fisioterapiaAnteriormente) %>" selected><%= valorSimNao(avaliacao?.fisioterapiaAnteriormente) %></option><% } %></select></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Plano terapêutico</legend>
+    <div class="form-grid">
+      <label>Objetivos do tratamento<textarea name="objetivos_tratamento" rows="4"><%= avaliacao?.objetivosTratamento ?? '' %></textarea></label>
+      <label>Condutas propostas<textarea name="condutas_propostas" rows="4"><%= avaliacao?.condutasPropostas ?? '' %></textarea></label>
+    </div>
+  </fieldset>
+
+  <div class="toolbar">
+    <button type="submit">Salvar</button>
+    <% if (avaliacao) { %>
+    <a class="button button--quiet" href="/pacientes/<%= paciente.id %>/avaliacoes/<%= avaliacao.id %>/pdf">Gerar PDF</a>
+    <% } %>
+  </div>
+</form>
+<%- include("../partials/footer") %>

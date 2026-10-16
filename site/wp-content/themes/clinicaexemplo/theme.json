@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/theme.json",
+  "version": 3,
+  "settings": {
+    "appearanceTools": true,
+    "layout": { "contentSize": "760px", "wideSize": "1200px" },
+    "color": { "palette": [
+      { "slug": "forest", "name": "Verde profundo", "color": "#174D32" },
+      { "slug": "leaf", "name": "Verde Clínica Exemplo", "color": "#5F8F3E" },
+      { "slug": "sage", "name": "Sálvia clara", "color": "#E7EFE1" },
+      { "slug": "white", "name": "Branco clínico", "color": "#FCFDFB" },
+      { "slug": "graphite", "name": "Grafite", "color": "#202722" },
+      { "slug": "sand", "name": "Areia neutra", "color": "#E9E3D8" }
+    ] },
+    "typography": { "fontFamilies": [
+      { "slug": "display", "name": "Lora", "fontFamily": "Lora, Georgia, serif" },
+      { "slug": "body", "name": "Manrope", "fontFamily": "Manrope, Arial, sans-serif" }
+    ] }
+  }
+}
+

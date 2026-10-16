@@ -1,0 +1,66 @@
+<%- include("../partials/header", { titulo: "Usuários" }) %>
+<section class="user-list">
+  <header class="page-header">
+    <div>
+      <h1>Usuários</h1>
+      <p class="patient-list-summary">Gerencie as contas de acesso da recepção.</p>
+    </div>
+    <a class="button" href="/usuarios/novo">Criar usuário de recepção</a>
+  </header>
+  <% if (sucesso) { %>
+  <p class="sucesso">Alteração salva com sucesso.</p>
+  <% } %>
+  <section class="today-summary" aria-label="Resumo de usuários">
+    <div class="panel"><strong><%= usuarios.length %></strong><span>Contas</span></div>
+    <div class="panel"><strong><%= usuarios.filter(u => u.ativo).length %></strong><span>Ativas</span></div>
+    <div class="panel"><strong><%= usuarios.filter(u => !u.ativo).length %></strong><span>Inativas</span></div>
+    <div class="panel"><strong><%= usuarios.filter(u => u.papel === 'recepcao').length %></strong><span>Recepção</span></div>
+  </section>
+  <div class="panel user-list-panel">
+    <div class="patient-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Nome</th><th>Usuário</th><th>Papel</th><th>Status</th><th>Ações</th></tr>
+        </thead>
+        <tbody>
+          <% for (const usuario of usuarios) { %>
+          <tr>
+            <td><strong><%= usuario.nome %></strong><% if (usuario.id === usuarioAtual.id) { %><small class="account-self">Sua conta</small><a href="/minha-senha">Trocar minha senha</a><% } %></td>
+            <td><%= usuario.nome_usuario %></td>
+            <td><span class="badge"><%= usuario.papel === "administradora" ? "Administradora" : "Recepção" %></span></td>
+            <td><span class="badge <%= usuario.ativo ? 'is-success' : 'is-danger' %>"><%= usuario.ativo ? "Ativo" : "Inativo" %></span></td>
+            <td>
+              <% if (usuario.papel === "recepcao" && usuario.id !== usuarioAtual.id) { %>
+              <div class="user-row-actions">
+                <details class="user-actions">
+                  <summary>Redefinir senha</summary>
+                  <form method="post" action="/usuarios/<%= usuario.id %>/redefinir-senha">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <div class="form-grid">
+                      <label>Nova senha<input type="password" name="senha" required minlength="8" /></label>
+                      <label>Confirmar<input type="password" name="confirmacao_senha" required minlength="8" /></label>
+                    </div>
+                    <button type="submit">Redefinir senha</button>
+                  </form>
+                </details>
+                <% if (usuario.ativo) { %>
+                <form
+                  method="post"
+                  action="/usuarios/<%= usuario.id %>/desativar"
+                  onsubmit="return confirm('Confirma a desativação deste usuário?')"
+                >
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <button class="button is-danger" type="submit">Desativar</button>
+                </form>
+                <% } %>
+              </div>
+              <% } %>
+            </td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<%- include("../partials/footer") %>

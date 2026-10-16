@@ -1,0 +1,38 @@
+<!-- src/views/baseConhecimento/editar.ejs -->
+<%- include("../partials/header", { titulo: "Editar entrada — Base de conhecimento" }) %>
+<header class="page-header">
+  <div>
+    <h1>Editar entrada</h1>
+    <p>Corrija a pergunta, resposta ou categoria.</p>
+  </div>
+  <a class="button button--quiet" href="/base-conhecimento<%= mostrarTodos ? '?todos=1' : '' %>">Voltar</a>
+</header>
+
+<form class="focused-form" method="post" action="/base-conhecimento/<%= entrada.id %>/editar">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <% if (mostrarTodos) { %>
+  <input type="hidden" name="todos" value="1" />
+  <% } %>
+  <% if (erro) { %>
+  <p class="erro"><%= erro %></p>
+  <% } %>
+  <div class="form-grid">
+    <label>Pergunta<textarea name="pergunta" rows="2" required><%= entrada.pergunta %></textarea></label>
+    <label>Resposta<textarea name="resposta" rows="4" required><%= entrada.resposta %></textarea></label>
+    <label>Categoria
+      <select name="categoria">
+        <option value="" <%= !entrada.categoria ? "selected" : "" %>>Sem categoria</option>
+        <% for (const categoria of categorias) { %>
+        <option value="<%= categoria.valor %>" <%= entrada.categoria === categoria.valor ? "selected" : "" %>><%= categoria.rotulo %></option>
+        <% } %>
+        <% if (entrada.categoria && !categorias.some((c) => c.valor === entrada.categoria)) { %>
+        <option value="<%= entrada.categoria %>" selected><%= entrada.categoria %> (livre)</option>
+        <% } %>
+      </select>
+    </label>
+  </div>
+  <div class="toolbar">
+    <button type="submit">Salvar</button>
+  </div>
+</form>
+<%- include("../partials/footer") %>

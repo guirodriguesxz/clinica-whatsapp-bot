@@ -1,0 +1,189 @@
+<%- include("../partials/header", { titulo: "Ficha do paciente" }) %>
+<section class="ficha-paciente">
+  <div class="acoes-impressao">
+    <a class="button button--quiet" href="/pacientes">Voltar para pacientes</a>
+    <a class="button button--quiet" href="/pacientes/<%= paciente.id %>/editar">Editar dados</a>
+    <a class="button button--quiet" href="/pacientes/<%= paciente.id %>/controle-sessoes">Controle de sessões</a>
+    <button class="button button--quiet" type="button" onclick="window.print()">Imprimir ficha</button>
+    <% if (usuarioAtual.papel === "administradora") { %>
+    <form
+      method="post"
+      action="/pacientes/<%= paciente.id %>/excluir"
+      onsubmit="return confirm('Excluir este paciente?\n\nSe não houver nenhum histórico (consulta, pagamento, pacote), o cadastro é apagado de vez, sem volta. Se houver histórico, o paciente é arquivado em vez de excluído: some das listas e da busca, mas o histórico continua intacto.')"
+    >
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <button class="button is-danger" type="submit">Excluir paciente</button>
+    </form>
+    <% } %>
+  </div>
+  <% if (typeof autoImprimir !== "undefined" && autoImprimir) { %>
+  <script>
+    window.addEventListener("load", () => window.print());
+  </script>
+  <% } %>
+  <section class="dados-paciente" aria-labelledby="patient-name">
+    <h1 id="patient-name"><%= paciente.nome %></h1>
+    <dl class="ficha-cadastral">
+      <div><dt>Número</dt><dd><%= paciente.id %></dd></div>
+      <div><dt>Médico</dt><dd>Ana Exemplo</dd></div>
+      <div class="campo-largo"><dt>Paciente</dt><dd><%= paciente.nome %></dd></div>
+      <div>
+        <dt>Nascimento</dt>
+        <dd><%= formatarData(paciente.data_nascimento) %><%= idade !== null ? ` — ${idade} anos` : "" %></dd>
+      </div>
+      <div><dt>Sexo</dt><dd><%= paciente.sexo === "F" ? "Feminino" : paciente.sexo === "M" ? "Masculino" : "" %></dd></div>
+      <div><dt>Entrada</dt><dd><%= formatarData(paciente.created_at) %></dd></div>
+      <div class="campo-largo">
+        <dt>Endereço</dt>
+        <dd><%= [paciente.endereco, paciente.numero].filter(Boolean).join(", ") %><%= paciente.bairro ? ` - ${paciente.bairro}` : "" %></dd>
+      </div>
+      <div><dt>Estado civil</dt><dd><%= paciente.estado_civil ?? "" %></dd></div>
+      <div><dt>Cidade</dt><dd><%= paciente.cidade ?? "" %></dd></div>
+      <div><dt>UF</dt><dd><%= paciente.uf ?? "" %></dd></div>
+      <div><dt>CEP</dt><dd><%= paciente.cep ?? "" %></dd></div>
+      <div><dt>Telefone</dt><dd><%= paciente.telefone %></dd></div>
+      <div><dt>CPF</dt><dd><%= paciente.cpf ?? "" %></dd></div>
+      <div><dt>RG</dt><dd><%= paciente.rg ?? "" %></dd></div>
+      <div><dt>CNS</dt><dd><%= paciente.cns ?? "" %></dd></div>
+      <div><dt>Profissão</dt><dd><%= paciente.profissao ?? "" %></dd></div>
+      <div class="campo-largo"><dt>E-Mail</dt><dd><%= paciente.email ?? "" %></dd></div>
+      <div><dt>Categoria</dt><dd><%= paciente.convenio ?? "" %></dd></div>
+      <div><dt>Matrícula</dt><dd><%= paciente.matricula_convenio ?? "" %></dd></div>
+    </dl>
+    <% if (paciente.observacao) { %>
+    <p class="ficha-observacao"><strong>Observação:</strong> <%= paciente.observacao %></p>
+    <% } %>
+  </section>
+
+  <section class="patient-history" aria-labelledby="patient-history-title">
+    <h2 id="patient-history-title">Histórico de agendamentos</h2>
+    <% if (historico.length === 0) { %>
+    <p>Nenhum agendamento registrado neste sistema.</p>
+    <% } else { %>
+    <div class="patient-table-wrap"><table class="data-table">
+      <thead><tr><th>Data</th><th>Hora</th><th>Atendimento</th><th>Status</th></tr></thead>
+      <tbody>
+        <% historico.forEach((agendamento) => { %>
+        <tr>
+          <td><%= agendamento.data %></td>
+          <td><%= agendamento.hora %></td>
+          <td><%= agendamento.tipo_atendimento %></td>
+          <td><%= agendamento.status %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table></div>
+    <% } %>
+  </section>
+
+  <section class="patient-history" aria-labelledby="patient-evaluations-title">
+    <div class="section-heading">
+      <h2 id="patient-evaluations-title">Avaliações fisioterapêuticas</h2>
+    </div>
+    <div class="toolbar">
+      <a class="button button--quiet" href="/pacientes/<%= paciente.id %>/avaliacoes/nova">Nova avaliação</a>
+    </div>
+    <% if (avaliacoes.length === 0) { %>
+    <p>Nenhuma avaliação registrada.</p>
+    <% } else { %>
+    <div class="patient-table-wrap"><table class="data-table">
+      <thead><tr><th>Data</th><th></th></tr></thead>
+      <tbody>
+        <% avaliacoes.forEach((avaliacao) => { %>
+        <tr>
+          <td><%= formatarData(avaliacao.dataAvaliacao) %></td>
+          <td><a href="/pacientes/<%= paciente.id %>/avaliacoes/<%= avaliacao.id %>/editar">Ver / editar</a></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table></div>
+    <% } %>
+  </section>
+
+  <section class="patient-history" aria-labelledby="patient-reports-title">
+    <div class="section-heading">
+      <h2 id="patient-reports-title">Relatórios fisioterapêuticos</h2>
+    </div>
+    <div class="toolbar">
+      <a class="button button--quiet" href="/pacientes/<%= paciente.id %>/relatorios/novo">Novo relatório</a>
+    </div>
+    <% if (relatorios.length === 0) { %>
+    <p>Nenhum relatório registrado.</p>
+    <% } else { %>
+    <div class="patient-table-wrap"><table class="data-table">
+      <thead><tr><th>Data</th><th></th></tr></thead>
+      <tbody>
+        <% relatorios.forEach((relatorio) => { %>
+        <tr>
+          <td><%= formatarData(relatorio.dataRelatorio) %></td>
+          <td><a href="/pacientes/<%= paciente.id %>/relatorios/<%= relatorio.id %>/editar">Ver / editar</a></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table></div>
+    <% } %>
+  </section>
+
+  <section class="session-package" aria-labelledby="session-package-title">
+    <div class="section-heading"><div><h2 id="session-package-title">Pacote de sessões</h2><p>Fisioterapia</p></div></div>
+    <%
+      const pacoteAtual = pacotes.find((p) => !p.cancelado && p.quantidade_usada < p.quantidade_total);
+    %>
+    <% if (pacoteAtual) { %>
+    <%
+      const quantidadeTotal = Number(pacoteAtual.quantidade_total) || 0;
+      const quantidadeUsada = Math.max(0, Number(pacoteAtual.quantidade_usada) || 0);
+      const porcentagemUsada = quantidadeTotal > 0 ? Math.min(100, Math.max(0, (quantidadeUsada / quantidadeTotal) * 100)) : 0;
+    %>
+    <div class="session-package-current">
+      <p class="session-package-label">Pacote atual</p>
+      <p class="session-package-count"><strong><%= pacoteAtual.quantidade_usada %> de <%= pacoteAtual.quantidade_total %></strong> sessões usadas</p>
+      <div class="progress-meter" role="progressbar" aria-label="Sessões usadas no pacote atual" aria-valuemin="0" aria-valuemax="<%= quantidadeTotal %>" aria-valuenow="<%= quantidadeUsada %>"><span class="progress-meter-fill" style="width: <%= porcentagemUsada %>%"></span></div>
+    </div>
+    <% if (usuarioAtual.papel === "administradora") { %>
+    <form
+      method="post"
+      action="/pacientes/<%= paciente.id %>/pacotes/<%= pacoteAtual.id %>/cancelar"
+      onsubmit="return confirm('Confirma o cancelamento deste pacote?')"
+    >
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <button class="button is-danger" type="submit">Cancelar pacote</button>
+    </form>
+    <% } %>
+    <% } else { %>
+    <form method="post" action="/pacientes/<%= paciente.id %>/pacotes">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <label>Quantidade de sessões<input type="number" name="quantidade_total" min="10" value="10" required /></label>
+      <button type="submit">Criar pacote</button>
+    </form>
+    <% } %>
+
+    <%
+      // "Histórico de pacotes" é pra pacotes ANTERIORES (ver spec) — o
+      // pacote atual já aparece no resumo acima ("Pacote atual: X de Y"),
+      // então precisa ficar de fora daqui, senão duplica na tela.
+      const pacotesAnteriores = pacotes.filter((p) => !pacoteAtual || p.id !== pacoteAtual.id);
+    %>
+    <% if (pacotesAnteriores.length > 0) { %>
+    <div class="package-history"><h3>Histórico de pacotes</h3>
+    <div class="patient-table-wrap"><table class="data-table">
+      <thead><tr><th>Criado em</th><th>Sessões</th><th>Situação</th></tr></thead>
+      <tbody>
+        <% pacotesAnteriores.forEach((p) => { %>
+        <tr>
+          <td><%= formatarDataHora(p.created_at) %></td>
+          <td><%= p.quantidade_usada %> de <%= p.quantidade_total %></td>
+          <td>
+            <% if (p.cancelado) { %>cancelado
+            <% } else if (p.quantidade_usada >= p.quantidade_total) { %>esgotado
+            <% } else { %>ativo
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table></div></div>
+    <% } %>
+  </section>
+</section>
+<%- include("../partials/footer") %>

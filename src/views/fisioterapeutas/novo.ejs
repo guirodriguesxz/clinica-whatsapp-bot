@@ -1,0 +1,25 @@
+<!-- src/views/fisioterapeutas/novo.ejs -->
+<%- include("../partials/header", { titulo: "Novo fisioterapeuta" }) %>
+<header class="page-header">
+  <div>
+    <h1>Novo fisioterapeuta</h1>
+    <p>Cadastre um fisioterapeuta da clínica.</p>
+  </div>
+  <a class="button button--quiet" href="/fisioterapeutas">Voltar</a>
+</header>
+
+<form class="focused-form" method="post" action="/fisioterapeutas/novo" enctype="multipart/form-data">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <% if (erro) { %>
+  <p class="erro"><%= erro %></p>
+  <% } %>
+  <div class="form-grid">
+    <label>Nome<input type="text" name="nome" required /></label>
+    <label>Crefito<input type="text" name="crefito" placeholder="Ex.: 435050-F" /></label>
+    <label>Assinatura (imagem PNG ou JPEG, opcional)<input name="assinatura" type="file" accept="image/png,image/jpeg" /></label>
+  </div>
+  <div class="toolbar">
+    <button type="submit">Criar</button>
+  </div>
+</form>
+<%- include("../partials/footer") %>

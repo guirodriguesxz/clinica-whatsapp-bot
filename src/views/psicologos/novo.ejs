@@ -1,0 +1,24 @@
+<!-- src/views/psicologos/novo.ejs -->
+<%- include("../partials/header", { titulo: "Novo psicólogo" }) %>
+<header class="page-header">
+  <div>
+    <h1>Novo psicólogo</h1>
+    <p>Cadastre um psicólogo da clínica.</p>
+  </div>
+  <a class="button button--quiet" href="/psicologos">Voltar</a>
+</header>
+
+<form class="focused-form" method="post" action="/psicologos/novo" enctype="multipart/form-data">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <% if (erro) { %>
+  <p class="erro"><%= erro %></p>
+  <% } %>
+  <div class="form-grid">
+    <label>Nome<input type="text" name="nome" required /></label>
+    <label>Foto (imagem PNG ou JPEG, opcional)<input name="foto" type="file" accept="image/png,image/jpeg" /></label>
+  </div>
+  <div class="toolbar">
+    <button type="submit">Criar</button>
+  </div>
+</form>
+<%- include("../partials/footer") %>

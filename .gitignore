@@ -1,0 +1,10 @@
+node_modules/
+.env
+*.log
+.DS_Store
+credentials/
+google-service-account.json
+.claude/worktrees/
+.worktrees/
+planilha-revisao-pendente.xlsx
+skill-observations/

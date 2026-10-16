@@ -1,0 +1,24 @@
+<%- include("../partials/header", { titulo: "Trocar senha" }) %>
+<header class="page-header">
+  <div>
+    <h1>Trocar senha</h1>
+    <p>Depois de trocar, você precisará entrar novamente com a nova senha.</p>
+  </div>
+  <a class="button button--quiet" href="/agendamentos">Voltar</a>
+</header>
+
+<form class="focused-form" method="post" action="/minha-senha">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <% if (erro) { %>
+  <p class="erro"><%= erro %></p>
+  <% } %>
+  <div class="form-grid">
+    <label>Senha atual<input type="password" name="senha_atual" required autocomplete="current-password" /></label>
+    <label>Nova senha<input type="password" name="senha" required minlength="8" autocomplete="new-password" /></label>
+    <label>Confirmar nova senha<input type="password" name="confirmacao_senha" required minlength="8" autocomplete="new-password" /></label>
+  </div>
+  <div class="toolbar">
+    <button type="submit">Trocar senha</button>
+  </div>
+</form>
+<%- include("../partials/footer") %>

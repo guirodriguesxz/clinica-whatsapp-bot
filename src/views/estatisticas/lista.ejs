@@ -1,0 +1,163 @@
+<!-- src/views/estatisticas/lista.ejs -->
+<%- include("../partials/header", { titulo: "Estatísticas" }) %>
+<header class="page-header">
+  <div>
+    <h1>Estatísticas</h1>
+  </div>
+</header>
+
+<div class="report-filters">
+  <div class="periodo-presets">
+    <% presets.forEach((preset) => { %>
+    <a
+      class="button<%= periodoResolvido.periodo === preset ? ' is-active' : '' %>"
+      href="/estatisticas?periodo=<%= preset %>"
+    ><%= preset === "hoje" ? "Hoje" : preset === "semana" ? "Semana" : preset === "mes" ? "Mês" : "Ano" %></a>
+    <% }) %>
+  </div>
+  <form method="get" action="/estatisticas">
+    <input type="hidden" name="periodo" value="custom" />
+    <label>De<input type="date" name="inicio" value="<%= inicioQuery %>" /></label>
+    <label>Até<input type="date" name="fim" value="<%= fimQuery %>" /></label>
+    <button type="submit">Filtrar período</button>
+  </form>
+  <p class="registro-info">
+    Período exibido: <%= periodoResolvido.dataInicio %> a <%= periodoResolvido.dataFim %>
+  </p>
+</div>
+
+<div class="metric-grid">
+  <div class="metric-card">
+    <h2>Faturamento total (por data do pagamento)</h2>
+    <p class="metric-value">R$ <%= formatarMoeda(estatisticas.faturamento.total) %></p>
+  </div>
+  <div class="metric-card">
+    <h2>Recebido</h2>
+    <p class="metric-value">R$ <%= formatarMoeda(estatisticas.faturamento.recebido) %></p>
+  </div>
+  <div class="metric-card">
+    <h2>Pendente</h2>
+    <p class="metric-value">R$ <%= formatarMoeda(estatisticas.faturamento.pendente) %></p>
+  </div>
+  <div class="metric-card">
+    <h2>Atendimentos realizados (por data da sessão)</h2>
+    <p class="metric-value"><%= estatisticas.atendimentos.total %></p>
+  </div>
+</div>
+
+<section class="report-section">
+  <h2>Faturamento por especialidade (por data do pagamento)</h2>
+  <div class="report-section-table">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Especialidade</th>
+          <th>Total</th>
+          <th>Recebido</th>
+          <th>Pendente</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% estatisticas.faturamento.porEspecialidade.forEach((linha) => { %>
+        <tr>
+          <td><%= linha.tipo_atendimento %></td>
+          <td>R$ <%= formatarMoeda(linha.total) %></td>
+          <td>R$ <%= formatarMoeda(linha.recebido) %></td>
+          <td>R$ <%= formatarMoeda(linha.pendente) %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="report-section">
+  <h2>Atendimentos por especialidade (por data da sessão)</h2>
+  <div class="report-section-table">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Especialidade</th>
+          <th>Quantidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% estatisticas.atendimentos.porEspecialidade.forEach((linha) => { %>
+        <tr>
+          <td><%= linha.tipo_atendimento %></td>
+          <td><%= linha.quantidade %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="report-section">
+  <h2>Valor a receber por convênio (repasse esperado, por data do pagamento)</h2>
+  <p class="registro-info">
+    Calculado com os valores de repasse cadastrados em Convênios. Mesma regra usada em
+    Financeiro › Relatório mensal, só que neste período.
+  </p>
+  <div class="report-section-table">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Convênio</th>
+          <th>Total faturado</th>
+          <th>Avaliações</th>
+          <th>Sessões</th>
+          <th>Repasse esperado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% estatisticas.repassePorConvenio.forEach((linha) => { %>
+        <tr>
+          <td><%= linha.plano %></td>
+          <td>R$ <%= formatarMoeda(linha.total) %></td>
+          <td><%= linha.quantidade_avaliacao %></td>
+          <td><%= linha.quantidade_sessao %></td>
+          <td>
+            <% if (linha.valorRepasse != null) { %>
+            R$ <%= formatarMoeda(linha.valorRepasse) %>
+            <% } else if (linha.motivoRepasseIndisponivel === "nao_configurado") { %>
+            — <span class="dica-repasse">(convênio sem valores de repasse cadastrados)</span>
+            <% } else { %>
+            — <span class="dica-repasse">(paciente sem convênio identificado)</span>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="report-section">
+  <h2>Atendimentos por profissional (por data da sessão)</h2>
+  <p class="registro-info">
+    Baseado no profissional registrado ao marcar presença — pode divergir da quebra por
+    profissional em Financeiro › Relatório, que usa outra fonte (dados importados do
+    sistema anterior).
+  </p>
+  <div class="report-section-table">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Profissional</th>
+          <th>Quantidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% estatisticas.atendimentos.porProfissional.forEach((linha) => { %>
+        <tr>
+          <td><%= linha.profissional %></td>
+          <td><%= linha.quantidade %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<%- include("../partials/footer") %>
