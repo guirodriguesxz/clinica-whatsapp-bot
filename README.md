@@ -1,4 +1,5 @@
 # Clínica Exemplo Bot
+[![CI](https://github.com/guirodriguesxz/clinica-whatsapp-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/guirodriguesxz/clinica-whatsapp-bot/actions/workflows/ci.yml)
 
 > **Projeto de portfólio.** Sistema construído para uma clínica real de fisioterapia e psicologia (bot de WhatsApp com IA, agenda, financeiro e TISS). O serviço foi desativado e todos os nomes, telefones e contatos neste repositório são fictícios.
 
